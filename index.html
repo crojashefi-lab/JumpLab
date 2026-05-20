@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JumpLab">
+<meta name="theme-color" content="#0c0f1a">
+<title>JumpLab — Análisis de Salto</title>
+
+<style>
+/* ── TOKENS ─────────────────────────────────────────────────────────── */
+:root {
+  --bg:       #0c0f1a;
+  --bg2:      #131728;
+  --bg3:      #1a2035;
+  --bg4:      #212840;
+  --line:     #2a3354;
+  --line2:    #3a4870;
+
+  --text:     #e8ecf4;
+  --text2:    #8b96b4;
+  --text3:    #4a5470;
+
+  --cyan:     #00d4ff;
+  --cyan2:    #0099cc;
+  --green:    #00e5a0;
+  --green2:   #00a870;
+  --amber:    #ffb800;
+  --red:      #ff4d6a;
+
+  --r:        8px;
+  --r2:       14px;
+  --r3:       20px;
+
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── RESET ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+/* ── HEADER ─────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-mark svg { width: 18px; height: 18px; }
+.logo-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.logo-name span { color: var(--cyan); }
+.version-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--cyan);
+  background: rgba(0,212,255,.12);
+  border: 1px solid rgba(0,212,255,.3);
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: .5px;
+}
+.fps-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--line2);
+  color: var(--text2);
+  background: var(--bg3);
+  font-variant-numeric: tabular-nums;
+  transition: all .3s;
+}
+.fps-badge.detected { color: var(--green); border-color: var(--green2); background: rgba(0,229,160,.08); }
+.fps-badge.hi { color: var(--cyan); border-color: var(--cyan2); background: rgba(0,212,255,.08); }
+
+/* ── MAIN ───────────────────────────────────────────────────────────── */
+.main { padding: 16px 16px 32px; max-width: 800px; margin: 0 auto; }
+
+/* ── DROP ZONE ──────────────────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed var(--line2);
+  border-radius: var(--r3);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  background: var(--bg2);
+  -webkit-tap-highlight-color: transparent;
+}
+.drop-zone:active, .drop-zone.drag-over {
+  border-color: var(--cyan);
+  background: rgba(0,212,255,.05);
+}
+.drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: rgba(0,212,255,.1);
+  border: 1px solid rgba(0,212,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.drop-icon svg { width: 28px; height: 28px; color: var(--cyan); }
+.drop-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+.drop-sub { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.drop-hint {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 20px; padding: 8px 16px;
+  background: var(--bg3); border-radius: 20px;
+  font-size: 12px; color: var(--text2);
+  border: 1px solid var(--line);
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot-green { background: var(--green); }
+.dot-amber { background: var(--amber); }
+.dot-red   { background: var(--red); }
+
+/* ── VIDEO PANEL ────────────────────────────────────────────────────── */
+.video-panel { display: none; }
+.video-panel.active { display: block; }
+
+.video-wrap {
+  position: relative;
+  background: #000;
+  border-radius: var(--r2);
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: 1px solid var(--line);
+}
+.video-wrap video {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* overlay info on video */
+.video-info-overlay {
+  position: absolute;
+  top: 10px; left: 10px;
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.vi-badge {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 8px; border-radius: 6px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0,0,0,.6);
+  border: 1px solid rgba(255,255,255,.1);
+  font-variant-numeric: tabular-nums;
+}
+.vi-badge.green  { color: var(--green); }
+.vi-badge.cyan   { color: var(--cyan); }
+.vi-badge.amber  { color: var(--amber); }
+.vi-badge.white  { color: var(--text); }
+
+/* event markers on video */
+.event-mark {
+  position: absolute; top: 0; bottom: 0;
+  width: 2px; pointer-events: none;
+  transition: left .1s;
+}
+.event-mark.takeoff  { background: var(--amber); }
+.event-mark.landing  { background: var(--green); }
+.event-mark-label {
+  position: absolute; top: 8px;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 6px; border-radius: 4px;
+  white-space: nowrap;
+}
+.event-mark.takeoff .event-mark-label {
+  background: var(--amber); color: #000;
+  left: 4px;
+}
+.event-mark.landing .event-mark-label {
+  background: var(--green); color: #000;
+  left: 4px;
+}
+
+/* ── SCRUBBER ───────────────────────────────────────────────────────── */
+.scrubber-section {
+  margin-top: 12px;
+  background: var(--bg2);
+  border-radius: var(--r2);
+  padding: 16px;
+  border: 1px solid var(--line);
+}
+
+.scrubber-track-wrap {
+  position: relative;
+  height: 36px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+.scrubber-bg {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  left: 0; right: 0; height: 4px;
+  background: var(--bg4);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.scrubber-progress {
+  height: 100%;
+  background: var(--cyan);
+  border-radius: 2px;
+  width: 0%;
+  transition: width .05s linear;
+}
+.scrubber-thumb {
+  position: absolute;
+  top: 50%; transform: translate(-50%, -50%);
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--cyan);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--cyan);
+  cursor: grab;
+  transition: left .05s linear, transform .1s;
+  left: 0%;
+}
+.scrubber-thumb:active { transform: translate(-50%, -50%) scale(1.2); cursor: grabbing; }
+
+/* event markers on scrubber */
+.scrubber-event {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 16px;
+  border-radius: 1.5px;
+  margin-left: -1.5px;
+}
+.scrubber-event.takeoff { background: var(--amber); }
+.scrubber-event.landing { background: var(--green); }
+
+/* frame counter row */
+.frame-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.frame-counter {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text2);
+}
+.frame-counter strong { color: var(--text); font-weight: 600; }
+.time-display {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--cyan);
+}
+
+/* ── TRANSPORT CONTROLS ─────────────────────────────────────────────── */
+.transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line2);
+  background: var(--bg3);
+  color: var(--text);
+  border-radius: var(--r);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s, border-color .15s, transform .1s;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.btn:active { transform: scale(.96); }
+.btn:hover  { background: var(--bg4); border-color: var(--line2); }
+.btn-icon   { padding: 9px; width: 40px; height: 40px; }
+.btn-lg     { padding: 11px 20px; font-size: 14px; }
+.btn-cyan   { background: var(--cyan); border-color: var(--cyan); color: #000; font-weight: 700; }
+.btn-cyan:hover { opacity: .9; }
+.btn-amber  { background: var(--amber); border-color: var(--amber); color: #000; font-weight: 700; }
+.btn-amber:active { opacity: .85; }
+.btn-green  { background: var(--green); border-color: var(--green); color: #000; font-weight: 700; }
+.btn-green:active { opacity: .85; }
+.btn-red    { background: var(--red); border-color: var(--red); color: #fff; font-weight: 700; }
+.btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+
+/* step buttons — ±1 y ±5 frames */
+.step-group {
+  display: flex; gap: 4px;
+}
+.step-btn {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 48px; height: 40px;
+  border: 1px solid var(--line2);
+  background: var(--bg3);
+  color: var(--text2);
+  border-radius: var(--r);
+  font-family: 'SF Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.step-btn:active { background: var(--bg4); transform: scale(.94); }
+
+/* ── EVENT MARKER BUTTONS ───────────────────────────────────────────── */
+.event-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* ── RESULTS CARD ───────────────────────────────────────────────────── */
+.results-card {
+  margin-top: 16px;
+  background: var(--bg2);
+  border-radius: var(--r2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.results-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.results-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .7px;
+}
+.results-body { padding: 16px; }
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.metric-card {
+  background: var(--bg3);
+  border-radius: var(--r);
+  padding: 14px 14px 10px;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.metric-card::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  opacity: .08;
+  transform: translate(12px, -12px);
+  background: var(--mc, var(--cyan));
+}
+.metric-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+.metric-value { font-size: 28px; font-weight: 700; letter-spacing: -1px; color: var(--text); line-height: 1; }
+.metric-unit  { font-size: 12px; color: var(--text2); margin-left: 2px; font-weight: 400; }
+.metric-sub   { font-size: 11px; color: var(--text3); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.metric-bar   { height: 2px; background: var(--line); border-radius: 1px; margin-top: 8px; overflow: hidden; }
+.metric-bar-fill { height: 100%; border-radius: 1px; background: var(--mc, var(--cyan)); transition: width .6s cubic-bezier(.4,0,.2,1); }
+
+/* full width metric */
+.metric-card.full { grid-column: 1 / -1; }
+
+/* ── INFO ROW ───────────────────────────────────────────────────────── */
+.info-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-top: 10px;
+}
+.info-pill {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--text2);
+  background: var(--bg3); border: 1px solid var(--line);
+  border-radius: 20px; padding: 4px 10px;
+}
+.info-pill strong { color: var(--text); font-weight: 600; }
+
+/* ── ERROR ESTIMATE ─────────────────────────────────────────────────── */
+.error-banner {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: var(--r);
+  font-size: 12px; margin-top: 10px;
+}
+.error-banner.good { background: rgba(0,229,160,.08); border: 1px solid rgba(0,229,160,.2); color: var(--green); }
+.error-banner.warn { background: rgba(255,184,0,.08);  border: 1px solid rgba(255,184,0,.2);  color: var(--amber); }
+.error-banner.bad  { background: rgba(255,77,106,.08); border: 1px solid rgba(255,77,106,.2); color: var(--red); }
+
+/* ── GUIDE SECTION ──────────────────────────────────────────────────── */
+.guide {
+  margin-top: 16px;
+  background: var(--bg2);
+  border-radius: var(--r2);
+  border: 1px solid var(--line);
+  padding: 16px;
+}
+.guide-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 12px; }
+.guide-steps { display: flex; flex-direction: column; gap: 8px; }
+.guide-step {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13px; color: var(--text2); line-height: 1.5;
+}
+.guide-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--bg4); border: 1px solid var(--line2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--text3);
+  flex-shrink: 0; margin-top: 1px;
+}
+.guide-step.done .guide-num { background: rgba(0,229,160,.15); border-color: var(--green2); color: var(--green); }
+.guide-step strong { color: var(--text); font-weight: 600; }
+
+/* ── LOADING OVERLAY ────────────────────────────────────────────────── */
+.loading-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(12,15,26,.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 14px;
+}
+.loading-overlay.active { display: flex; }
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--line2);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--text2); }
+
+/* ── TOAST ──────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: calc(24px + var(--safe-bottom));
+  left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 13px; font-weight: 500;
+  white-space: nowrap;
+  z-index: 300;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+  opacity: 0;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.success { border-color: var(--green2); color: var(--green); }
+.toast.amber   { border-color: var(--amber);  color: var(--amber); }
+.toast.info    { border-color: var(--cyan2);  color: var(--cyan); }
+
+/* ── UTILITY ────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+.gap-12 { margin-top: 12px; }
+.gap-16 { margin-top: 16px; }
+</style>
+</head>
+
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Cargando video...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="22 7 13 16 9 12 2 19"/>
+        <polyline points="16 7 22 7 22 13"/>
+      </svg>
+    </div>
+    <span class="logo-name">Jump<span>Lab</span></span>
+    <span class="version-badge">β · F0</span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="fps-badge" id="fpsBadge">fps —</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- DROP ZONE -->
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept="video/*" capture="">
+    <div class="drop-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <rect x="2" y="2" width="20" height="20" rx="2.5"/>
+        <path d="M10 8l6 4-6 4V8z" fill="currentColor" stroke="none"/>
+      </svg>
+    </div>
+    <div class="drop-title">Subir video de salto</div>
+    <div class="drop-sub">Selecciona un video grabado en<br>modo <strong>Slo-mo 240fps</strong> con tu iPhone</div>
+    <div class="drop-hint">
+      <span class="dot dot-green"></span> 240fps → ±1mm
+      <span class="dot dot-amber" style="margin-left:6px"></span> 120fps → ±2mm
+      <span class="dot dot-red" style="margin-left:6px"></span> 30fps → ±8mm
+    </div>
+  </div>
+
+  <!-- VIDEO PANEL (oculto hasta cargar video) -->
+  <div class="video-panel" id="videoPanel">
+
+    <!-- VIDEO -->
+    <div class="video-wrap" id="videoWrap">
+      <video id="video" preload="auto" playsinline webkit-playsinline muted></video>
+
+      <!-- Badges info overlay -->
+      <div class="video-info-overlay">
+        <span class="vi-badge green"  id="viBadgeFps">— fps</span>
+        <span class="vi-badge cyan"   id="viBadgeRes">—×—</span>
+        <span class="vi-badge white"  id="viBadgeDur">—s</span>
+        <span class="vi-badge amber"  id="viBadgeState">IDLE</span>
+      </div>
+
+      <!-- Despegue marker -->
+      <div class="event-mark takeoff hidden" id="markTakeoff">
+        <div class="event-mark-label">DESP</div>
+      </div>
+      <!-- Aterrizaje marker -->
+      <div class="event-mark landing hidden" id="markLanding">
+        <div class="event-mark-label">ATER</div>
+      </div>
+    </div>
+
+    <!-- SCRUBBER SECTION -->
+    <div class="scrubber-section">
+
+      <!-- Frame / time display -->
+      <div class="frame-counter-row">
+        <div class="frame-counter">
+          Frame <strong id="currentFrameNum">0</strong> / <span id="totalFrameNum">0</span>
+        </div>
+        <div class="time-display" id="timeDisplay">0.000 s</div>
+      </div>
+
+      <!-- Scrubber track -->
+      <div class="scrubber-track-wrap" id="scrubberTrack">
+        <div class="scrubber-bg">
+          <div class="scrubber-progress" id="scrubberProgress"></div>
+        </div>
+        <!-- Event markers en el scrubber -->
+        <div class="scrubber-event takeoff hidden" id="scrubMarkTakeoff"></div>
+        <div class="scrubber-event landing hidden" id="scrubMarkLanding"></div>
+        <!-- Thumb -->
+        <div class="scrubber-thumb" id="scrubberThumb"></div>
+      </div>
+
+      <!-- Transport -->
+      <div class="transport">
+        <div class="step-group">
+          <button class="step-btn" id="btnM10" title="−10 frames">−10</button>
+          <button class="step-btn" id="btnM1"  title="−1 frame">−1</button>
+        </div>
+        <button class="btn btn-icon btn-cyan" id="btnPlayPause" title="Play/Pause">
+          <svg id="iconPlay" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="iconPause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        </button>
+        <div class="step-group">
+          <button class="step-btn" id="btnP1"  title="+1 frame">+1</button>
+          <button class="step-btn" id="btnP10" title="+10 frames">+10</button>
+        </div>
+      </div>
+
+      <!-- Event marker buttons -->
+      <div class="event-btns">
+        <button class="btn btn-amber btn-lg" id="btnSetTakeoff" disabled>
+          ↑ Marcar despegue
+        </button>
+        <button class="btn btn-green btn-lg" id="btnSetLanding" disabled>
+          ↓ Marcar aterrizaje
+        </button>
+      </div>
+
+      <!-- Reset -->
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="btnClearMarkers" style="flex:1" disabled>
+          Borrar marcas
+        </button>
+        <button class="btn btn-cyan" id="btnCalculate" style="flex:2" disabled>
+          Calcular →
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULTS CARD (oculto hasta calcular) -->
+    <div class="results-card hidden" id="resultsCard">
+      <div class="results-header">
+        <span class="results-title">Resultado del salto</span>
+        <button class="btn" id="btnNewJump" style="padding:5px 12px;font-size:12px">+ Nuevo</button>
+      </div>
+      <div class="results-body">
+        <div class="results-grid" id="resultsGrid">
+          <!-- Se rellena dinámicamente -->
+        </div>
+        <div class="error-banner" id="errorBanner"></div>
+        <div class="info-row" id="infoRow"></div>
+      </div>
+    </div>
+
+    <!-- GUIDE -->
+    <div class="guide">
+      <div class="guide-title">Pasos</div>
+      <div class="guide-steps">
+        <div class="guide-step done" id="step1">
+          <div class="guide-num">✓</div>
+          <div><strong>Video cargado</strong> — fps detectados automáticamente</div>
+        </div>
+        <div class="guide-step" id="step2">
+          <div class="guide-num">2</div>
+          <div>Navega frame a frame hasta el momento exacto del <strong>despegue</strong> (pies dejan el suelo) y presiona <strong>Marcar despegue</strong></div>
+        </div>
+        <div class="guide-step" id="step3">
+          <div class="guide-num">3</div>
+          <div>Avanza hasta el <strong>aterrizaje</strong> (primer contacto del pie con el suelo) y presiona <strong>Marcar aterrizaje</strong></div>
+        </div>
+        <div class="guide-step" id="step4">
+          <div class="guide-num">4</div>
+          <div>Presiona <strong>Calcular</strong> para obtener altura, RSI, potencia y más</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /video-panel -->
+
+</main>
+
+<!-- ENGINE -->
+<script>
+/* ─── BIOMECHANICS ENGINE (inline para evitar CORS en file://) ──────── */
+const G = 9.80665;
+
+class FpsDetector {
+  constructor(videoEl, onResult) {
+    this.video = videoEl;
+    this.onResult = onResult;
+    this.timestamps = [];
+    this.target = 16;
+  }
+  start() {
+    this.timestamps = [];
+    if (!('requestVideoFrameCallback' in HTMLVideoElement.prototype)) {
+      this._fallback(); return;
+    }
+    const measure = (now, meta) => {
+      this.timestamps.push(meta.mediaTime);
+      if (this.timestamps.length < this.target) {
+        this.video.requestVideoFrameCallback(measure);
+      } else {
+        this._compute();
+      }
+    };
+    this.video.muted = true;
+    this.video.playbackRate = 16;
+    this.video.play().catch(() => {});
+    this.video.requestVideoFrameCallback(measure);
+  }
+  _compute() {
+    this.video.pause();
+    this.video.playbackRate = 1;
+    this.video.currentTime = 0;
+    const intervals = [];
+    for (let i = 1; i < this.timestamps.length; i++) {
+      const dt = this.timestamps[i] - this.timestamps[i-1];
+      if (dt > 0.002 && dt < 0.1) intervals.push(dt);
+    }
+    if (!intervals.length) { this._fallback(); return; }
+    const avg = intervals.reduce((a,b) => a+b) / intervals.length;
+    const measured = 1 / avg;
+    const fps = [24,25,30,50,60,90,120,240].reduce((p,c) =>
+      Math.abs(c-measured) < Math.abs(p-measured) ? c : p);
+    this.onResult({ fps, measured: measured.toFixed(1), method: 'rvfc' });
+  }
+  _fallback() {
+    this.video.pause();
+    this.video.playbackRate = 1;
+    this.video.currentTime = 0;
+    const q = this.video.getVideoPlaybackQuality?.();
+    if (q?.totalVideoFrames > 0 && this.video.duration > 0) {
+      const raw = q.totalVideoFrames / this.video.duration;
+      const fps = [24,25,30,50,60,120,240].reduce((p,c) =>
+        Math.abs(c-raw) < Math.abs(p-raw) ? c : p);
+      this.onResult({ fps, measured: raw.toFixed(1), method: 'frames/dur' });
+    } else {
+      this.onResult({ fps: 240, measured: '?', method: 'assumed' });
+    }
+  }
+}
+
+class FrameNavigator {
+  constructor(videoEl, fps) {
+    this.video = videoEl;
+    this.fps = fps;
+    this.fd = 1 / fps;
+    this.total = Math.floor(videoEl.duration * fps);
+  }
+  get frame() { return Math.round(this.video.currentTime * this.fps); }
+  get timeMs() { return +(this.video.currentTime * 1000).toFixed(1); }
+  go(n) {
+    const c = Math.max(0, Math.min(n, this.total - 1));
+    this.video.currentTime = c / this.fps;
+    return c;
+  }
+  next(n=1) { return this.go(this.frame + n); }
+  prev(n=1) { return this.go(this.frame - n); }
+}
+
+function calcHeight(t_s)  { return (G * t_s * t_s) / 8; }
+function calcRSI(h, tc)   { return tc > 0 ? h / tc : null; }
+function calcRSIMod(h, tc, tf) { return (tc+tf) > 0 ? h/(tc+tf) : null; }
+function calcVelocity(h)  { return Math.sqrt(2 * G * h); }
+function calcPower(m,h,tc){ return tc > 0 ? (m * G * h) / tc : null; }
+function calcErrMm(fps, tf){ return ((G * (1/fps) * tf) / 4) * 1000; }
+
+/* ─── STATE ─────────────────────────────────────────────────────────── */
+let nav = null;
+let fps = null;
+let takeoffFrame = null;
+let landingFrame = null;
+
+const video      = document.getElementById('video');
+const dropZone   = document.getElementById('dropZone');
+const fileInput  = document.getElementById('fileInput');
+const videoPanel = document.getElementById('videoPanel');
+
+const scrubTrack    = document.getElementById('scrubberTrack');
+const scrubThumb    = document.getElementById('scrubberThumb');
+const scrubProgress = document.getElementById('scrubberProgress');
+const scrubMarkTO   = document.getElementById('scrubMarkTakeoff');
+const scrubMarkLA   = document.getElementById('scrubMarkLanding');
+
+const markTO = document.getElementById('markTakeoff');
+const markLA = document.getElementById('markLanding');
+
+const fpsBadge = document.getElementById('fpsBadge');
+
+/* ─── FILE LOAD ─────────────────────────────────────────────────────── */
+function loadFile(file) {
+  if (!file || !file.type.startsWith('video/')) {
+    showToast('Selecciona un archivo de video válido', 'amber'); return;
+  }
+  showLoading('Cargando video...');
+  const url = URL.createObjectURL(file);
+  video.src = url;
+  video.load();
+}
+
+video.addEventListener('loadedmetadata', () => {
+  setLoading('Detectando fps reales...');
+
+  document.getElementById('viBadgeRes').textContent =
+    `${video.videoWidth}×${video.videoHeight}`;
+  document.getElementById('viBadgeDur').textContent =
+    `${video.duration.toFixed(1)}s`;
+
+  const detector = new FpsDetector(video, result => {
+    fps = result.fps;
+    nav = new FrameNavigator(video, fps);
+
+    // Update UI
+    fpsBadge.textContent = `${fps} fps`;
+    fpsBadge.className = 'fps-badge ' + (fps >= 240 ? 'hi' : fps >= 120 ? 'detected' : 'detected');
+    document.getElementById('viBadgeFps').textContent = `${fps}fps (${result.method})`;
+    document.getElementById('totalFrameNum').textContent = nav.total;
+
+    enableControls();
+    dropZone.classList.add('hidden');
+    videoPanel.classList.add('active');
+    hideLoading();
+
+    const msg = fps >= 240
+      ? `✓ ${fps}fps detectados — precisión ±1mm`
+      : fps >= 120
+        ? `${fps}fps detectados — precisión ±2mm`
+        : `Atención: ${fps}fps — precisión reducida (±${fps===60?4:8}mm)`;
+    showToast(msg, fps >= 120 ? 'success' : 'amber');
+
+    updateScrubber();
+  });
+  detector.start();
+});
+
+video.addEventListener('error', () => {
+  hideLoading();
+  showToast('Error al cargar el video. Intenta con otro formato.', 'amber');
+});
+
+/* ─── DRAG & DROP ───────────────────────────────────────────────────── */
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  loadFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => loadFile(e.target.files[0]));
+
+/* ─── SCRUBBER ──────────────────────────────────────────────────────── */
+function updateScrubber() {
+  if (!nav) return;
+  const pct = nav.total > 0 ? (nav.frame / nav.total) * 100 : 0;
+  scrubThumb.style.left = pct + '%';
+  scrubProgress.style.width = pct + '%';
+  document.getElementById('currentFrameNum').textContent = nav.frame;
+  document.getElementById('timeDisplay').textContent = (nav.timeMs / 1000).toFixed(3) + ' s';
+
+  // Video markers on top of video
+  updateVideoMarkers();
+}
+
+function updateVideoMarkers() {
+  if (!nav) return;
+  // Takeoff
+  if (takeoffFrame !== null) {
+    const pct = (takeoffFrame / nav.total) * 100;
+    markTO.style.left = pct + '%';
+    markTO.classList.remove('hidden');
+    scrubMarkTO.style.left = pct + '%';
+    scrubMarkTO.classList.remove('hidden');
+  }
+  // Landing
+  if (landingFrame !== null) {
+    const pct = (landingFrame / nav.total) * 100;
+    markLA.style.left = pct + '%';
+    markLA.classList.remove('hidden');
+    scrubMarkLA.style.left = pct + '%';
+    scrubMarkLA.classList.remove('hidden');
+  }
+}
+
+// Scrubber interaction — mouse + touch
+let scrubbing = false;
+
+function scrubAt(clientX) {
+  if (!nav) return;
+  const rect = scrubTrack.getBoundingClientRect();
+  const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  const frame = Math.round(ratio * nav.total);
+  nav.go(frame);
+  updateScrubber();
+}
+
+scrubTrack.addEventListener('pointerdown', e => {
+  scrubbing = true;
+  scrubTrack.setPointerCapture(e.pointerId);
+  scrubAt(e.clientX);
+});
+scrubTrack.addEventListener('pointermove', e => { if (scrubbing) scrubAt(e.clientX); });
+scrubTrack.addEventListener('pointerup',   () => { scrubbing = false; });
+scrubTrack.addEventListener('pointercancel', () => { scrubbing = false; });
+
+/* ─── VIDEO timeupdate → actualizar scrubber al reproducir ──────────── */
+video.addEventListener('timeupdate', () => {
+  if (!nav || scrubbing) return;
+  updateScrubber();
+});
+video.addEventListener('seeked', () => { if (!scrubbing) updateScrubber(); });
+
+/* ─── TRANSPORT ─────────────────────────────────────────────────────── */
+document.getElementById('btnPlayPause').addEventListener('click', () => {
+  if (video.paused) {
+    video.playbackRate = 0.25; // slow motion visual
+    video.play();
+    document.getElementById('iconPlay').classList.add('hidden');
+    document.getElementById('iconPause').classList.remove('hidden');
+    document.getElementById('viBadgeState').textContent = '▶ ×0.25';
+  } else {
+    video.pause();
+    document.getElementById('iconPlay').classList.remove('hidden');
+    document.getElementById('iconPause').classList.add('hidden');
+    document.getElementById('viBadgeState').textContent = 'PAUSADO';
+  }
+});
+
+video.addEventListener('ended', () => {
+  document.getElementById('iconPlay').classList.remove('hidden');
+  document.getElementById('iconPause').classList.add('hidden');
+  document.getElementById('viBadgeState').textContent = 'FIN';
+});
+
+document.getElementById('btnM1') .addEventListener('click', () => { nav?.prev(1);  updateScrubber(); });
+document.getElementById('btnP1') .addEventListener('click', () => { nav?.next(1);  updateScrubber(); });
+document.getElementById('btnM10').addEventListener('click', () => { nav?.prev(10); updateScrubber(); });
+document.getElementById('btnP10').addEventListener('click', () => { nav?.next(10); updateScrubber(); });
+
+// Keyboard shortcuts (iPad con teclado externo)
+document.addEventListener('keydown', e => {
+  if (!nav) return;
+  const tag = document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  switch (e.key) {
+    case 'ArrowLeft':  e.preventDefault(); nav.prev(e.shiftKey ? 10 : 1); updateScrubber(); break;
+    case 'ArrowRight': e.preventDefault(); nav.next(e.shiftKey ? 10 : 1); updateScrubber(); break;
+    case ' ':          e.preventDefault(); document.getElementById('btnPlayPause').click(); break;
+    case 't': case 'T': document.getElementById('btnSetTakeoff').click(); break;
+    case 'l': case 'L': document.getElementById('btnSetLanding').click(); break;
+    case 'Enter':       document.getElementById('btnCalculate').click(); break;
+  }
+});
+
+/* ─── EVENT MARKERS ─────────────────────────────────────────────────── */
+document.getElementById('btnSetTakeoff').addEventListener('click', () => {
+  if (!nav) return;
+  takeoffFrame = nav.frame;
+  document.getElementById('step2').classList.add('done');
+  document.getElementById('step2').querySelector('.guide-num').textContent = '✓';
+  document.getElementById('btnClearMarkers').disabled = false;
+  updateVideoMarkers();
+  updateCalculateButton();
+  showToast(`Despegue marcado — frame ${takeoffFrame}`, 'info');
+});
+
+document.getElementById('btnSetLanding').addEventListener('click', () => {
+  if (!nav) return;
+  landingFrame = nav.frame;
+  document.getElementById('step3').classList.add('done');
+  document.getElementById('step3').querySelector('.guide-num').textContent = '✓';
+  document.getElementById('btnClearMarkers').disabled = false;
+  updateVideoMarkers();
+  updateCalculateButton();
+  showToast(`Aterrizaje marcado — frame ${landingFrame}`, 'info');
+});
+
+document.getElementById('btnClearMarkers').addEventListener('click', () => {
+  takeoffFrame = null;
+  landingFrame = null;
+  markTO.classList.add('hidden');
+  markLA.classList.add('hidden');
+  scrubMarkTO.classList.add('hidden');
+  scrubMarkLA.classList.add('hidden');
+  document.getElementById('resultsCard').classList.add('hidden');
+  document.getElementById('btnClearMarkers').disabled = true;
+  document.getElementById('btnCalculate').disabled = true;
+  ['step2','step3','step4'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('done');
+    el.querySelector('.guide-num').textContent = id.replace('step','');
+  });
+});
+
+function updateCalculateButton() {
+  const can = takeoffFrame !== null && landingFrame !== null && landingFrame > takeoffFrame;
+  document.getElementById('btnCalculate').disabled = !can;
+  if (can) {
+    document.getElementById('step4').classList.add('done');
+    document.getElementById('step4').querySelector('.guide-num').textContent = '→';
+  }
+}
+
+/* ─── CALCULATE ─────────────────────────────────────────────────────── */
+document.getElementById('btnCalculate').addEventListener('click', () => {
+  if (takeoffFrame === null || landingFrame === null) return;
+  if (landingFrame <= takeoffFrame) {
+    showToast('El aterrizaje debe ser posterior al despegue', 'amber'); return;
+  }
+
+  const flightFrames = landingFrame - takeoffFrame;
+  const t_flight  = flightFrames / fps;
+  const h         = calcHeight(t_flight);
+  const v         = calcVelocity(h);
+  const errMm     = calcErrMm(fps, t_flight);
+  const h_cm      = (h * 100).toFixed(1);
+  const t_ms      = (t_flight * 1000).toFixed(0);
+
+  // Renderizar resultados
+  const grid = document.getElementById('resultsGrid');
+  grid.innerHTML = `
+    <div class="metric-card" style="--mc:var(--cyan)">
+      <div class="metric-label">Altura de salto</div>
+      <div><span class="metric-value">${h_cm}</span><span class="metric-unit">cm</span></div>
+      <div class="metric-sub">${(h*100/2.54).toFixed(1)} pulgadas</div>
+      <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(100,(h*100)/80*100).toFixed(0)}%"></div></div>
+    </div>
+    <div class="metric-card" style="--mc:var(--amber)">
+      <div class="metric-label">Tiempo de vuelo</div>
+      <div><span class="metric-value">${t_ms}</span><span class="metric-unit">ms</span></div>
+      <div class="metric-sub">${flightFrames} frames a ${fps}fps</div>
+      <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(100,t_flight/1.2*100).toFixed(0)}%"></div></div>
+    </div>
+    <div class="metric-card" style="--mc:var(--green)">
+      <div class="metric-label">Velocidad despegue</div>
+      <div><span class="metric-value">${v.toFixed(2)}</span><span class="metric-unit">m/s</span></div>
+      <div class="metric-sub">Cinemática: v=√(2·g·h)</div>
+      <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(100,v/5*100).toFixed(0)}%"></div></div>
+    </div>
+    <div class="metric-card" style="--mc:var(--cyan)">
+      <div class="metric-label">Precisión medición</div>
+      <div><span class="metric-value">±${errMm.toFixed(1)}</span><span class="metric-unit">mm</span></div>
+      <div class="metric-sub">± ${(errMm/10).toFixed(2)} cm con ${fps}fps</div>
+      <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(100,(10/errMm)*100).toFixed(0)}%"></div></div>
+    </div>
+  `;
+
+  // Error banner
+  const errEl = document.getElementById('errorBanner');
+  if (fps >= 240) {
+    errEl.className = 'error-banner good';
+    errEl.innerHTML = `✓ Video a ${fps}fps — precisión equivalente a plataforma de fuerza`;
+  } else if (fps >= 120) {
+    errEl.className = 'error-banner warn';
+    errEl.innerHTML = `⚠ Video a ${fps}fps — buena precisión. Para ±1mm graba a 240fps`;
+  } else {
+    errEl.className = 'error-banner bad';
+    errEl.innerHTML = `✕ Video a ${fps}fps — precisión limitada. Usa modo Slo-mo 240fps`;
+  }
+
+  // Info row
+  document.getElementById('infoRow').innerHTML = `
+    <div class="info-pill">Frame despegue <strong>${takeoffFrame}</strong></div>
+    <div class="info-pill">Frame aterrizaje <strong>${landingFrame}</strong></div>
+    <div class="info-pill">Frames vuelo <strong>${flightFrames}</strong></div>
+    <div class="info-pill">g = <strong>9.80665 m/s²</strong></div>
+  `;
+
+  document.getElementById('resultsCard').classList.remove('hidden');
+  document.getElementById('step4').querySelector('.guide-num').textContent = '✓';
+  document.getElementById('step4').classList.add('done');
+
+  // Scroll a resultados
+  setTimeout(() => {
+    document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+
+  showToast(`Altura: ${h_cm} cm | T.vuelo: ${t_ms}ms`, 'success');
+});
+
+/* ─── NEW JUMP ──────────────────────────────────────────────────────── */
+document.getElementById('btnNewJump').addEventListener('click', () => {
+  document.getElementById('btnClearMarkers').click();
+  document.getElementById('resultsCard').classList.add('hidden');
+  nav?.go(0);
+  updateScrubber();
+});
+
+/* ─── ENABLE / DISABLE CONTROLS ────────────────────────────────────── */
+function enableControls() {
+  document.getElementById('btnPlayPause').disabled  = false;
+  document.getElementById('btnM1').disabled  = false;
+  document.getElementById('btnP1').disabled  = false;
+  document.getElementById('btnM10').disabled = false;
+  document.getElementById('btnP10').disabled = false;
+  document.getElementById('btnSetTakeoff').disabled = false;
+  document.getElementById('btnSetLanding').disabled = false;
+}
+
+/* ─── LOADING / TOAST ───────────────────────────────────────────────── */
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent = msg;
+  document.getElementById('loadingOverlay').classList.add('active');
+}
+function setLoading(msg) {
+  document.getElementById('loadingText').textContent = msg;
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('active');
+}
+
+let toastTimer = null;
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  clearTimeout(toastTimer);
+  // Force reflow
+  void t.offsetWidth;
+  t.classList.add('show');
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+</script>
+
+</body>
+</html>
