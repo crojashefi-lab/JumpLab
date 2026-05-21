@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JumpLab">
+<meta name="theme-color" content="#080b14">
+<title>JumpLab</title>
+<style>
+:root{
+  --bg:#080b14;--bg2:#0f1422;--bg3:#161d30;--bg4:#1e2840;
+  --line:#252f4a;--line2:#2e3d60;
+  --text:#edf0f8;--text2:#7d8db0;--text3:#404d6e;
+  --cyan:#00d4ff;--cyan2:#0099cc;
+  --green:#00e5a0;--green2:#008f65;
+  --amber:#ffb800;--amber2:#c78f00;
+  --red:#ff4d6a;--purple:#a78bfa;
+  --r:8px;--r2:14px;--r3:22px;
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px;-webkit-text-size-adjust:100%;height:-webkit-fill-available}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;min-height:100vh;min-height:-webkit-fill-available;overflow:hidden}
+input,button,select{font-family:inherit}
+button{cursor:pointer;border:none;background:none;color:inherit}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);transition:opacity .25s ease,transform .25s ease;overflow:hidden;will-change:opacity,transform}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateX(32px)}
+.screen.back.hidden{transform:translateX(-32px)}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-t) + 12px) 18px 12px;background:var(--bg2);border-bottom:1px solid var(--line);flex-shrink:0;z-index:10}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:var(--cyan);display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:16px;height:16px;stroke:#000;stroke-width:2.8;fill:none;stroke-linecap:round}
+.logo-name{font-size:18px;font-weight:800;letter-spacing:-.6px}
+.logo-name em{color:var(--cyan);font-style:normal}
+.pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid var(--line2);color:var(--text2);background:var(--bg3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill.hi{color:var(--cyan);border-color:var(--cyan2);background:rgba(0,212,255,.08)}
+.pill.ok{color:var(--green);border-color:var(--green2);background:rgba(0,229,160,.08)}
+.pill.warn{color:var(--amber);border-color:var(--amber2);background:rgba(255,184,0,.08)}
+.topbar-r{display:flex;align-items:center;gap:7px}
+.back-btn{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:500;color:var(--cyan);padding:6px 2px}
+.back-btn svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}
+
+/* SCROLL */
+.scroll-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px calc(36px + var(--safe-b))}
+
+/* ── S1 STYLES ── */
+.card{background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);padding:18px;margin-bottom:14px}
+.card-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:14px}
+.field{margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.6px}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-size:16px;padding:12px 14px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.field input:focus{border-color:var(--cyan)}
+.field input::placeholder{color:var(--text3)}
+
+/* JUMP TYPE SELECTOR */
+.jump-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0}
+.jbtn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 8px;border-radius:var(--r);border:1.5px solid var(--line2);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;touch-action:manipulation;user-select:none;-webkit-user-select:none;text-align:center}
+.jbtn small{font-size:10px;font-weight:500;color:var(--text3);line-height:1.3}
+.jbtn:active{transform:scale(.95)}
+.jbtn.sel{border-color:var(--cyan);background:rgba(0,212,255,.1);color:var(--cyan)}
+.jbtn.sel small{color:var(--cyan2)}
+.jbtn.dj.sel{border-color:var(--purple);background:rgba(167,139,250,.1);color:var(--purple)}
+
+/* JUMP PROTOCOL HINT */
+.protocol-hint{background:var(--bg3);border-radius:var(--r);border-left:3px solid var(--cyan);padding:12px 14px;margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6;display:none}
+.protocol-hint.dj{border-color:var(--purple)}
+.protocol-hint strong{color:var(--text);font-weight:600}
+
+/* RECENTS */
+.rec-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px}
+.rec-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.rec-item{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;cursor:pointer;transition:background .15s;touch-action:manipulation}
+.rec-item:active{background:var(--bg3)}
+.rec-name{font-size:14px;font-weight:600}
+.rec-meta{font-size:12px;color:var(--text2)}
+.rec-del{width:28px;height:28px;border-radius:50%;background:var(--bg4);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:16px;line-height:1}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--text3);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* SOURCE BUTTONS */
+.src-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+.src-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px 12px;border-radius:var(--r2);border:1.5px dashed var(--line2);background:var(--bg2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;position:relative;text-align:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.src-btn:active{background:var(--bg3);border-color:var(--cyan);color:var(--cyan)}
+.src-btn svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round}
+.src-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.src-btn.tip{border-color:var(--green2);color:var(--green)}
+.src-note{font-size:12px;color:var(--text3);text-align:center;line-height:1.5;padding:0 4px}
+.src-note strong{color:var(--amber);font-weight:600}
+
+/* ── S2 STYLES ── */
+#s2{background:#000}
+#s2 .topbar{background:rgba(0,0,0,.8);border-color:rgba(255,255,255,.07)}
+.vid-wrap{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0}
+#vid{width:100%;height:100%;object-fit:contain;display:block}
+
+
+
+/* VIDEO BADGES */
+.vid-badges{position:absolute;top:10px;left:10px;display:flex;gap:5px;flex-wrap:wrap;pointer-events:none}
+.vb{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.vb.c{color:var(--cyan)}.vb.g{color:var(--green)}.vb.a{color:var(--amber)}.vb.w{color:#fff}.vb.p{color:var(--purple)}
+
+/* EVENT LINES ON VIDEO */
+.evt-line{position:absolute;top:0;bottom:0;width:2.5px;display:none;pointer-events:none}
+.evt-line.to{background:var(--amber)}
+.evt-line.la{background:var(--green)}
+.evt-line.dj-land{background:var(--purple)}
+.evt-tag{position:absolute;top:10px;left:5px;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.evt-line.to .evt-tag{background:var(--amber);color:#000}
+.evt-line.la .evt-tag{background:var(--green);color:#000}
+.evt-line.dj-land .evt-tag{background:var(--purple);color:#fff}
+
+/* CTRL PANEL */
+.ctrl{background:rgba(8,11,20,.95);border-top:1px solid var(--line);padding:10px 14px calc(10px + var(--safe-b));flex-shrink:0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+
+/* SCRUBBER */
+.scrub-wrap{position:relative;height:34px;margin-bottom:7px;cursor:pointer;touch-action:none}
+.scrub-track{position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.scrub-fill{height:100%;background:var(--cyan);border-radius:2px;width:0%}
+.scrub-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--cyan);border:3px solid #000;box-shadow:0 0 0 2px var(--cyan);left:0%}
+.scrub-evt{position:absolute;top:50%;transform:translateY(-50%);width:3px;height:14px;border-radius:1.5px;margin-left:-1.5px;display:none}
+.scrub-evt.to{background:var(--amber)}.scrub-evt.la{background:var(--green)}.scrub-evt.dl{background:var(--purple)}
+
+/* FRAME ROW */
+.frame-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 1px}
+.frame-ct{font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums}
+.frame-ct strong{color:var(--text);font-weight:700}
+.t-now{font-size:13px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums}
+
+/* TRANSPORT */
+.transport{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px}
+.tbtn{display:flex;align-items:center;justify-content:center;border:1px solid var(--line2);background:var(--bg3);border-radius:var(--r);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .13s;touch-action:manipulation;font-family:monospace}
+.tbtn:active{background:var(--bg4);transform:scale(.92)}
+.tbtn.sm{width:46px;height:42px}
+.tbtn.play{width:52px;height:52px;border-radius:50%;background:var(--cyan);border-color:var(--cyan);color:#000;font-size:20px}
+.tbtn.play:active{opacity:.82}
+
+/* MARKER BUTTONS */
+.mrow{display:flex;flex-direction:column;gap:7px}
+.mrow-pair{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mbtn{display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 10px;border-radius:var(--r2);border:none;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation;transition:all .13s;user-select:none;-webkit-user-select:none;position:relative}
+.mbtn:active{transform:scale(.95)}
+.mbtn:disabled{opacity:.32;transform:none}
+.mbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;flex-shrink:0}
+.mbtn.to{background:var(--amber);color:#000}
+.mbtn.la{background:var(--green);color:#000}
+.mbtn.dj{background:var(--purple);color:#fff}
+.mbtn.done::after{content:'✓';position:absolute;right:10px;font-size:14px}
+
+/* step indicator for DJ */
+.dj-steps{display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:8px}
+.dj-step{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--text3)}
+.dj-step.active{color:var(--text)}
+.dj-dot{width:8px;height:8px;border-radius:50%;background:var(--line2)}
+.dj-step.done .dj-dot{background:var(--green)}
+.dj-step.active .dj-dot{background:var(--cyan)}
+.dj-line{width:16px;height:1px;background:var(--line2)}
+
+.calc-btn{width:100%;margin-top:7px;padding:14px;background:var(--cyan);color:#000;border-radius:var(--r2);border:none;font-size:15px;font-weight:800;cursor:pointer;transition:all .13s;touch-action:manipulation;display:none}
+.calc-btn.on{display:block}
+.calc-btn:active{opacity:.86;transform:scale(.98)}
+
+/* ── S3 STYLES ── */
+.ath-hdr{display:flex;align-items:center;gap:12px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);padding:15px;margin-bottom:14px}
+.ath-av{width:46px;height:46px;border-radius:50%;background:rgba(0,212,255,.12);border:2px solid var(--cyan2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--cyan);flex-shrink:0}
+.ath-n{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.ath-m{font-size:13px;color:var(--text2);margin-top:2px}
+.jump-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;margin-top:4px}
+.jump-badge.sj,.jump-badge.cmj,.jump-badge.abk{background:rgba(0,212,255,.12);color:var(--cyan);border:1px solid var(--cyan2)}
+.jump-badge.dj{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid var(--purple)}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.mc{background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);padding:15px 13px 11px;position:relative;overflow:hidden}
+.mc::after{content:'';position:absolute;top:-10px;right:-10px;width:48px;height:48px;border-radius:50%;background:var(--mc,var(--cyan));opacity:.07}
+.mc.full{grid-column:1/-1}
+.mc-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:7px}
+.mc-val{font-size:30px;font-weight:800;letter-spacing:-1.2px;line-height:1;color:var(--text)}
+.mc-unit{font-size:13px;font-weight:400;color:var(--text2);margin-left:2px}
+.mc-sub{font-size:11px;color:var(--text3);margin-top:4px;font-variant-numeric:tabular-nums}
+.mc-bar{height:2px;background:var(--line);border-radius:1px;margin-top:9px;overflow:hidden}
+.mc-bf{height:100%;border-radius:1px;background:var(--mc,var(--cyan));transition:width .7s cubic-bezier(.4,0,.2,1)}
+.trow{display:grid;gap:8px;margin-bottom:10px}
+.tc{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:12px 8px;text-align:center}
+.tc-v{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.tc-l{font-size:10px;color:var(--text3);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.err{display:flex;align-items:center;gap:8px;padding:11px 13px;border-radius:var(--r);font-size:12px;font-weight:500;margin-bottom:10px;line-height:1.4}
+.err.good{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.22);color:var(--green)}
+.err.warn{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.22);color:var(--amber)}
+.err.bad{background:rgba(255,77,106,.08);border:1px solid rgba(255,77,106,.22);color:var(--red)}
+.fcard{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:13px;margin-bottom:10px}
+.fcard-t{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:9px}
+.fr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.fr:last-child{border:none;padding-bottom:0}
+.fr-n{font-size:12px;color:var(--text2)}.fr-e{font-size:12px;font-family:monospace;color:var(--text3)}
+.arow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.abtn{padding:14px;border-radius:var(--r2);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .13s;touch-action:manipulation}
+.abtn:active{transform:scale(.95)}
+.abtn.new{background:var(--cyan);color:#000}
+.abtn.shr{background:var(--bg3);color:var(--text);border:1px solid var(--line2)}
+
+/* MODALS */
+.modal-bg{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;align-items:flex-end;justify-content:center}
+.modal-bg.center{align-items:center;padding:20px}
+.modal-bg.on{display:flex}
+.modal-box{background:var(--bg2);border-radius:var(--r3) var(--r3) 0 0;border:1px solid var(--line);padding:24px 20px calc(24px + var(--safe-b));width:100%;max-width:500px}
+.modal-bg.center .modal-box{border-radius:var(--r3);padding:24px 20px}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:16px}
+.modal-close-btn{width:100%;padding:14px;background:var(--cyan);color:#000;border:none;border-radius:var(--r2);font-size:15px;font-weight:800;cursor:pointer;margin-top:16px;touch-action:manipulation}
+
+/* HISTORY */
+.hist-section{margin-bottom:14px}
+.hist-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.hist-lbl a{font-size:11px;color:var(--cyan);font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0}
+.hist-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s}
+.hist-card:active{background:var(--bg3)}
+.hist-left{}
+.hist-name{font-size:13px;font-weight:600;color:var(--text)}
+.hist-meta{font-size:12px;color:var(--text2);margin-top:2px}
+.hist-right{text-align:right}
+.hist-val{font-size:18px;font-weight:800;color:var(--cyan);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.hist-unit{font-size:11px;color:var(--text2)}
+.hist-delta{font-size:11px;font-weight:600;margin-top:2px}
+.hist-delta.up{color:var(--green)}.hist-delta.dn{color:var(--red)}.hist-delta.eq{color:var(--text3)}
+.delta-banner{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;margin-bottom:10px}
+.db-item{text-align:center}
+.db-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.db-lbl{font-size:10px;color:var(--text3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.db-val.up{color:var(--green)}.db-val.dn{color:var(--red)}.db-val.eq{color:var(--text3)}
+
+/* FULL HISTORY SCREEN */
+#s4 .topbar{background:var(--bg2)}
+.hist-athlete-group{margin-bottom:18px}
+.hist-athlete-name{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding:0 2px}
+.hist-row{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;margin-bottom:5px;display:flex;align-items:center;gap:12px}
+.hist-row-jump{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid var(--cyan2);flex-shrink:0}
+.hist-row-jump.dj{background:rgba(167,139,250,.1);color:var(--purple);border-color:var(--purple)}
+.hist-row-info{flex:1}
+.hist-row-date{font-size:12px;color:var(--text2)}
+.hist-row-athlete{font-size:11px;color:var(--text3)}
+.hist-row-val{font-size:17px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;text-align:right;flex-shrink:0}
+.hist-row-del{width:28px;height:28px;border-radius:50%;background:var(--bg4);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:16px;flex-shrink:0}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-state div:first-child{font-size:36px;margin-bottom:10px}
+.empty-state div:last-child{font-size:13px;line-height:1.5}
+.toast{position:fixed;bottom:calc(28px + var(--safe-b));left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg3);border:1px solid var(--line2);border-radius:20px;padding:10px 20px;font-size:13px;font-weight:600;white-space:nowrap;z-index:999;opacity:0;transition:transform .28s cubic-bezier(.34,1.56,.64,1),opacity .28s;pointer-events:none}
+.toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok{color:var(--green);border-color:var(--green2)}
+.toast.warn{color:var(--amber);border-color:var(--amber2)}
+.toast.info{color:var(--cyan);border-color:var(--cyan2)}
+
+/* LOADING */
+.ld{position:fixed;inset:0;z-index:500;background:rgba(8,11,20,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.ld.on{display:flex}
+.spin{width:40px;height:40px;border-radius:50%;border:3px solid var(--line2);border-top-color:var(--cyan);animation:sp .65s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ld-msg{font-size:14px;color:var(--text2)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="ld" id="ld"><div class="spin"></div><div class="ld-msg" id="ldMsg">Cargando...</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- ═══ PANTALLA 1 — ATLETA + TIPO + VIDEO ═══ -->
+<div class="screen" id="s1">
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><polyline points="22 7 13 16 9 12 2 19"/><polyline points="16 7 22 7 22 13"/></svg></div>
+      <span class="logo-name">Jump<em>Lab</em></span>
+    </div>
+    <div class="topbar-r"><span class="pill">β</span></div>
+  </div>
+  <div class="scroll-body">
+
+    <!-- ATLETA -->
+    <div class="card">
+      <div class="card-lbl">Datos del deportista</div>
+      <div class="field">
+        <label for="iName">Nombre</label>
+        <input id="iName" type="text" placeholder="Ej: Pablo Crocco" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="iMass">Masa corporal (kg)</label>
+        <input id="iMass" type="number" placeholder="Ej: 64" min="20" max="200" inputmode="decimal">
+      </div>
+    </div>
+
+    <!-- HISTORIAL RECIENTE -->
+    <div id="histSection" class="hist-section hidden">
+      <div class="hist-lbl">
+        Últimas evaluaciones
+        <a onclick="go('s4')">Ver todo →</a>
+      </div>
+      <div id="histList"></div>
+    </div>
+
+    <!-- RECIENTES -->
+    <div id="recSec" class="hidden">
+      <div class="rec-lbl">Atletas recientes</div>
+      <div class="rec-list" id="recList"></div>
+    </div>
+
+    <!-- TIPO DE SALTO -->
+    <div class="card">
+      <div class="card-lbl">Tipo de salto</div>
+      <div class="jump-grid">
+        <button class="jbtn sel" data-jump="cmj">CMJ<small>Contramovimiento</small></button>
+        <button class="jbtn" data-jump="sj">SJ<small>Squat Jump</small></button>
+        <button class="jbtn" data-jump="abk">ABK<small>Abalakov</small></button>
+        <button class="jbtn dj" data-jump="dj">Drop Jump<small>RSI + contacto</small></button>
+      </div>
+      <div class="protocol-hint" id="protocolHint"></div>
+    </div>
+
+    <div class="divider">seleccionar video</div>
+
+    <div class="src-grid">
+      <div class="src-btn" id="upBtn">
+        <input type="file" id="fileIn" accept="video/*">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Subir video<br><small style="font-size:11px;font-weight:400;color:var(--text3)">desde carrete</small>
+      </div>
+      <div class="src-btn tip" id="tipBtn">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        ¿Cómo grabar?<br><small style="font-size:11px;font-weight:400;color:var(--green2)">protocolo</small>
+      </div>
+    </div>
+    <div class="src-note">
+      Graba primero con la app <strong>Cámara</strong> en modo <strong>Slo-mo 240fps</strong>, luego sube el video aquí.<br>
+      <span style="font-size:11px;color:var(--text3);margin-top:4px;display:block">Ajustes → Cámara → Grabar Slo-mo → 1080p a 240fps</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ PANTALLA 2 — VIDEO + MARCADO ═══ -->
+<div class="screen back hidden" id="s2">
+  <div class="topbar">
+    <button class="back-btn" id="back2"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Atleta</button>
+    <div class="topbar-r">
+      <span class="pill" id="pillFps">— fps</span>
+      <span class="pill" id="pillF">f 0</span>
+    </div>
+  </div>
+
+  <div class="vid-wrap">
+    <video id="vid" preload="auto" playsinline webkit-playsinline muted></video>
+    <div class="vid-badges">
+      <span class="vb c" id="vbF">—</span>
+      <span class="vb w" id="vbR">—</span>
+      <span class="vb a" id="vbS">PAUSA</span>
+      <span class="vb p" id="vbJ">CMJ</span>
+    </div>
+    <!-- Event lines -->
+    <div class="evt-line to"      id="lTO"><div class="evt-tag">DESP</div></div>
+    <div class="evt-line la"      id="lLA"><div class="evt-tag">ATER</div></div>
+    <div class="evt-line dj-land" id="lDL"><div class="evt-tag">CAÍDA</div></div>
+  </div>
+
+  <div class="ctrl">
+    <!-- Scrubber -->
+    <div class="scrub-wrap" id="sWrap">
+      <div class="scrub-track"><div class="scrub-fill" id="sFill"></div></div>
+      <div class="scrub-evt to" id="sTO"></div>
+      <div class="scrub-evt la" id="sLA"></div>
+      <div class="scrub-evt dl" id="sDL"></div>
+      <div class="scrub-thumb" id="sThumb"></div>
+    </div>
+    <!-- Frame info -->
+    <div class="frame-row">
+      <div class="frame-ct">Frame <strong id="fCur">0</strong> / <span id="fTot">0</span></div>
+      <div class="t-now" id="tNow">0.000 s</div>
+    </div>
+    <!-- Transport -->
+    <div class="transport">
+      <div style="display:flex;gap:4px">
+        <button class="tbtn sm" id="bM10">−10</button>
+        <button class="tbtn sm" id="bM1">−1</button>
+      </div>
+      <button class="tbtn play" id="bPlay">▶</button>
+      <div style="display:flex;gap:4px">
+        <button class="tbtn sm" id="bP1">+1</button>
+        <button class="tbtn sm" id="bP10">+10</button>
+      </div>
+    </div>
+    <!-- Marker buttons — rendered by JS based on jump type -->
+    <div class="mrow" id="mrow"></div>
+    <button class="calc-btn" id="btnCalc">Calcular resultado →</button>
+  </div>
+</div>
+
+<!-- ═══ PANTALLA 3 — RESULTADOS ═══ -->
+<div class="screen hidden" id="s3">
+  <div class="topbar">
+    <button class="back-btn" id="back3"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Video</button>
+    <div class="topbar-r"><span class="pill ok">Resultado</span></div>
+  </div>
+  <div class="scroll-body">
+    <div class="ath-hdr">
+      <div class="ath-av" id="rAv">?</div>
+      <div>
+        <div class="ath-n" id="rNm">—</div>
+        <div class="ath-m" id="rMt">—</div>
+        <div class="jump-badge" id="rJump">CMJ</div>
+      </div>
+    </div>
+    <div class="mg"   id="mg"></div>
+    <div class="trow" id="tr"></div>
+    <div class="err"  id="eb"></div>
+    <div class="fcard" id="fcard"></div>
+    <!-- Export actions -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button class="abtn new" id="btnNew">+ Nueva eval.</button>
+      <button class="abtn shr" id="btnShr">Compartir</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <button class="abtn" id="btnPdfAtleta" style="background:var(--bg3);border:1px solid var(--line2);color:var(--text);display:flex;align-items:center;justify-content:center;gap:6px">
+        <span>📄</span> PDF atleta
+      </button>
+      <button class="abtn" id="btnPdfSesion" style="background:var(--bg3);border:1px solid var(--line2);color:var(--text);display:flex;align-items:center;justify-content:center;gap:6px">
+        <span>📋</span> PDF sesión
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANTALLA 4 — HISTORIAL COMPLETO ═══ -->
+<div class="screen hidden" id="s4">
+  <div class="topbar">
+    <button class="back-btn" id="back4"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Inicio</button>
+    <div class="topbar-r">
+      <span class="pill" id="histCount">0 registros</span>
+      <button class="abtn" id="btnExportCsv" style="padding:5px 10px;font-size:12px;background:var(--bg3);border:1px solid var(--line2);color:var(--green);border-radius:var(--r);display:flex;align-items:center;gap:5px;font-weight:600">⬇ CSV</button>
+    </div>
+  </div>
+  <div style="padding:12px 16px 0;display:flex;gap:8px">
+    <button class="abtn" id="btnPdfSesionHist" style="flex:1;padding:10px;font-size:13px;background:var(--bg3);border:1px solid var(--line2);color:var(--text);border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600">📋 PDF sesión de hoy</button>
+    <button class="abtn" id="btnClubLogo" style="padding:10px 12px;font-size:13px;background:var(--bg3);border:1px solid var(--amber2);color:var(--amber);border-radius:var(--r);display:flex;align-items:center;gap:6px;font-weight:600">🏟 Logo club</button>
+  </div>
+  <div class="scroll-body" id="histFull"></div>
+</div>
+
+<!-- MODAL: Club logo -->
+<div class="modal-bg center" id="clubLogoModal">
+  <div class="modal-box">
+    <div class="modal-title">Logo del club / organización</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">
+      El logo aparecerá en todos los reportes PDF junto al logo JumpLab.
+    </div>
+    <!-- Preview -->
+    <div style="background:var(--bg3);border:1px solid var(--line);border-radius:var(--r2);padding:16px;text-align:center;margin-bottom:14px;min-height:80px;display:flex;align-items:center;justify-content:center" id="logoPreview">
+      <span style="color:var(--text3);font-size:13px">Sin logo — toca para subir</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--bg3);border:1.5px dashed var(--line2);border-radius:var(--r2);cursor:pointer;font-size:14px;font-weight:600;color:var(--text2)">
+        <input type="file" id="clubLogoInput" accept="image/*" style="display:none">
+        📁 Seleccionar imagen (PNG / JPG)
+      </label>
+      <div class="field" style="margin:0">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.6px">Nombre del club / organización</label>
+        <input id="clubName" type="text" class="field input" placeholder="Ej: Club Atlético Coquimbo" style="width:100%;background:var(--bg3);border:1px solid var(--line2);border-radius:var(--r);color:var(--text);font-size:15px;padding:11px 13px;outline:none">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+      <button onclick="closeModal('clubLogoModal')" style="padding:13px;border-radius:var(--r2);border:1px solid var(--line2);background:var(--bg3);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer">Cancelar</button>
+      <button onclick="saveClubLogo()" style="padding:13px;border-radius:var(--r2);border:none;background:var(--cyan);color:#000;font-size:14px;font-weight:700;cursor:pointer">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Instrucciones grabación -->
+<div class="modal-bg" id="tipModal">
+  <div class="modal-box">
+    <div class="modal-title">Cómo grabar para máxima precisión</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text2)">
+        <span style="background:var(--cyan);color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;margin-top:1px">1</span>
+        <span>Configura <strong style="color:var(--text)">Ajustes → Cámara → Grabar Slo-mo → 1080p a 240fps</strong></span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text2)">
+        <span style="background:var(--cyan);color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;margin-top:1px">2</span>
+        <span>Ubica el teléfono de forma <strong style="color:var(--text)">vertical</strong>, a <strong style="color:var(--text)">50–80 cm del suelo</strong>, apuntando a los pies y tobillos del atleta</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text2)">
+        <span style="background:var(--cyan);color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;margin-top:1px">3</span>
+        <span>Los pies deben verse completos en la zona inferior del encuadre — <strong style="color:var(--amber)">sin cortar los tobillos</strong></span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text2)">
+        <span style="background:var(--cyan);color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;margin-top:1px">4</span>
+        <span>Buena iluminación — a 240fps el obturador es rápido y necesita luz. <strong style="color:var(--text)">Exterior o sala bien iluminada</strong></span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text2)">
+        <span style="background:var(--cyan);color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;margin-top:1px">5</span>
+        <span>Vuelve a JumpLab y usa <strong style="color:var(--text)">Subir video</strong></span>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:10px 12px;border-left:3px solid var(--purple);font-size:12px;color:var(--text2);margin-top:2px">
+        <strong style="color:var(--purple)">Drop Jump:</strong> graba desde que el atleta cae de la caja hasta el segundo aterrizaje completo. Asegúrate de que ambos pies se vean en cámara durante todo el contacto.
+      </div>
+    </div>
+    <button class="modal-close-btn" onclick="closeModal('tipModal')">Entendido</button>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar fps -->
+<div class="modal-bg center" id="fpsModal">
+  <div class="modal-box">
+
+    <!-- PASO 1: fps -->
+    <div id="fpsStep1">
+      <div class="modal-title">Paso 1 — fps del video</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5" id="fpsDetMsg">—</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px" id="fpsBtnGrid"></div>
+    </div>
+
+    <!-- PASO 2: fuente del video -->
+    <div id="fpsStep2" style="display:none">
+      <div class="modal-title">Paso 2 — ¿cómo grabaste?</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">
+        El iPhone guarda el Slo-mo <strong style="color:var(--text)">estirado en el tiempo</strong>. La app necesita saber el origen para corregir el cálculo.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+
+        <!-- Opción A: Slo-mo iPhone/Android nativo -->
+        <button onclick="applyFps(true)" style="
+          display:flex;align-items:flex-start;gap:12px;
+          padding:14px;border-radius:var(--r2);
+          border:1.5px solid var(--green2);
+          background:rgba(0,229,160,.07);
+          color:var(--text);cursor:pointer;text-align:left;
+          touch-action:manipulation;width:100%">
+          <span style="font-size:24px;flex-shrink:0">🐢</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--green)">Slo-mo nativo iPhone / Android</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px;line-height:1.4">
+              Grabé con la app <strong>Cámara</strong> en modo Slo-mo y el video se ve <strong>en cámara lenta</strong> en el carrete
+            </div>
+          </div>
+        </button>
+
+        <!-- Opción B: video normal a X fps -->
+        <button onclick="applyFps(false)" style="
+          display:flex;align-items:flex-start;gap:12px;
+          padding:14px;border-radius:var(--r2);
+          border:1.5px solid var(--line2);
+          background:var(--bg3);
+          color:var(--text);cursor:pointer;text-align:left;
+          touch-action:manipulation;width:100%">
+          <span style="font-size:24px;flex-shrink:0">🎥</span>
+          <div>
+            <div style="font-size:14px;font-weight:700">Video normal / cámara externa</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px;line-height:1.4">
+              El video se ve a <strong>velocidad normal</strong> — grabé con cámara deportiva, GoPro, o sin modo Slo-mo
+            </div>
+          </div>
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+'use strict';
+const G=9.80665, SK='jl_ath', HK='jl_hist';
+const $=id=>document.getElementById(id);
+
+/* ── STATE ── */
+let S={
+  athlete:{name:'',mass:null},
+  jump:'cmj',
+  fps:null, nav:null,
+  to:null, la:null, djLand:null,
+  res:null,
+  pendingFile:null,
+  slomoFactor:1
+};
+let cur='s1', playing=false, drag=false;
+const vid=$('vid');
+
+/* ── HISTORY STORAGE ── */
+const HIST_KEY=HK;
+function getHist(){try{return JSON.parse(localStorage.getItem(HIST_KEY))||[];}catch{return[];}}
+function saveToHist(r){
+  const h=getHist();
+  const entry={
+    id:Date.now(),
+    athlete:r.athlete.name,
+    mass:r.athlete.mass,
+    jump:r.jump,
+    fps:r.fps,
+    slomoFactor:r.slomoFactor||1,
+    date:r.date.toISOString(),
+    h_cm:parseFloat(r.h_cm),
+    tf_ms:Math.round(r.tf*1000),
+    v:parseFloat(r.v.toFixed(2)),
+    P:r.P?Math.round(r.P):null,
+    err:parseFloat(r.err.toFixed(1)),
+    rsi:r.rsi?parseFloat(r.rsi.toFixed(3)):null,
+    rsiMod:r.rsiMod?parseFloat(r.rsiMod.toFixed(3)):null,
+    tc_ms:r.tc?Math.round(r.tc*1000):null,
+  };
+  h.unshift(entry);
+  if(h.length>200)h.pop();
+  localStorage.setItem(HIST_KEY,JSON.stringify(h));
+  return entry;
+}
+function deleteFromHist(id){
+  localStorage.setItem(HIST_KEY,JSON.stringify(getHist().filter(e=>e.id!==id)));
+  renderHistFull();renderHistPreview();
+}
+window.deleteFromHist=deleteFromHist;
+
+/* Get previous result for same athlete + jump type */
+function getPrev(athleteName, jump, currentId){
+  return getHist().find(e=>e.athlete===athleteName&&e.jump===jump&&e.id!==currentId)||null;
+}
+
+/* ── RENDER HISTORY PREVIEW (s1) ── */
+function renderHistPreview(){
+  const h=getHist().slice(0,4);
+  const sec=$('histSection'), ul=$('histList');
+  if(!h.length){sec.classList.add('hidden');return;}
+  sec.classList.remove('hidden');
+  ul.innerHTML=h.map(e=>{
+    const prev=getPrev(e.athlete,e.jump,e.id);
+    const delta=prev?e.h_cm-prev.h_cm:null;
+    const deltaStr=delta!==null
+      ?`<div class="hist-delta ${delta>0?'up':delta<0?'dn':'eq'}">${delta>0?'▲':'▼'} ${Math.abs(delta).toFixed(1)} cm vs anterior</div>`
+      :'';
+    const jcls=e.jump==='dj'?'dj':'';
+    return `<div class="hist-card">
+      <div class="hist-left">
+        <div class="hist-name">${escHtml(e.athlete)} <span class="hist-row-jump ${jcls}">${JUMP_CFG[e.jump]?.label||e.jump}</span></div>
+        <div class="hist-meta">${new Date(e.date).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})} · ${e.fps}fps</div>
+        ${deltaStr}
+      </div>
+      <div class="hist-right">
+        <div class="hist-val">${e.h_cm}<span class="hist-unit">cm</span></div>
+        ${e.rsi?`<div style="font-size:11px;color:var(--purple)">RSI ${e.rsi}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── RENDER FULL HISTORY (s4) ── */
+function renderHistFull(){
+  const h=getHist();
+  $('histCount').textContent=`${h.length} registros`;
+  const container=$('histFull');
+  if(!h.length){
+    container.innerHTML=`<div class="empty-state"><div>📋</div><div>Sin evaluaciones registradas.<br>Realiza tu primera evaluación.</div></div>`;
+    return;
+  }
+  // Group by athlete
+  const byAth={};
+  h.forEach(e=>{
+    if(!byAth[e.athlete])byAth[e.athlete]=[];
+    byAth[e.athlete].push(e);
+  });
+  container.innerHTML=Object.entries(byAth).map(([name,evals])=>`
+    <div class="hist-athlete-group">
+      <div class="hist-athlete-name">${escHtml(name)}</div>
+      ${evals.map(e=>{
+        const jcls=e.jump==='dj'?'dj':'';
+        return `<div class="hist-row">
+          <span class="hist-row-jump ${jcls}">${JUMP_CFG[e.jump]?.label||e.jump}</span>
+          <div class="hist-row-info">
+            <div class="hist-row-date">${new Date(e.date).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})} · ${e.fps}fps${e.slomoFactor>1?' ÷'+e.slomoFactor:''}</div>
+            ${e.rsi?`<div style="font-size:11px;color:var(--purple)">RSI ${e.rsi} · ${e.tc_ms}ms contacto</div>`:''}
+          </div>
+          <div class="hist-row-val">${e.h_cm}<span style="font-size:12px;color:var(--text2)">cm</span></div>
+          <button class="hist-row-del" onclick="deleteFromHist(${e.id})">×</button>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+/* ── DELTA BANNER in results ── */
+function renderDelta(r){
+  const prev=getPrev(r.athlete.name, r.jump, r.id||0);
+  if(!prev)return '';
+  const dh=(r.h_cm-prev.h_cm).toFixed(1);
+  const dv=(r.v-prev.v).toFixed(2);
+  const dhCls=dh>0?'up':dh<0?'dn':'eq';
+  const dvCls=dv>0?'up':dv<0?'dn':'eq';
+  const prevDate=new Date(prev.date).toLocaleDateString('es-CL',{day:'2-digit',month:'short'});
+  return `<div class="delta-banner" style="margin-bottom:10px">
+    <div class="db-item">
+      <div class="db-val ${dhCls}">${dh>0?'+':''}${dh} cm</div>
+      <div class="db-lbl">vs ${prevDate}</div>
+    </div>
+    <div class="db-item">
+      <div class="db-val ${dvCls}">${dv>0?'+':''}${dv} m/s</div>
+      <div class="db-lbl">vel. despegue</div>
+    </div>
+    ${r.P&&prev.P?`<div class="db-item">
+      <div class="db-val ${r.P>prev.P?'up':r.P<prev.P?'dn':'eq'}">${r.P>prev.P?'+':''}${Math.round(r.P-prev.P)} W</div>
+      <div class="db-lbl">potencia</div>
+    </div>`:''}
+  </div>`;
+}
+
+/* ── JUMP TYPE CONFIG ── */
+const JUMP_CFG={
+  cmj:{label:'CMJ',color:'cyan',protocol:'Despegue: <strong>primer frame sin contacto</strong>. Aterrizaje: <strong>primer frame con contacto</strong>. El atleta debe caer con piernas extendidas para no sobreestimar la altura.'},
+  sj: {label:'SJ', color:'cyan',protocol:'Sin contramovimiento previo. Despegue desde posición estática. Marcar igual que CMJ: <strong>primer frame sin contacto → primer frame con contacto</strong>.'},
+  abk:{label:'ABK',color:'cyan',protocol:'Igual que CMJ pero el atleta usa los brazos. Despegue: <strong>primer frame sin contacto</strong>. Aterrizaje: <strong>primer frame con contacto</strong>.'},
+  dj: {label:'DJ', color:'purple',protocol:'Requiere <strong>3 marcas</strong>: ① Aterrizaje de la caída, ② Despegue del rebote, ③ Aterrizaje final. Con esto se calcula RSI = altura / tiempo de contacto.'}
+};
+
+/* ── SCREEN NAV ── */
+function go(name){
+  const ord=['s1','s2','s3','s4'];
+  const fwd=ord.indexOf(name)>ord.indexOf(cur);
+  ['s1','s2','s3','s4'].forEach(k=>{
+    const el=$(k);if(!el)return;
+    el.classList.toggle('hidden',k!==name);
+    if(!fwd)el.classList.add('back'); else el.classList.remove('back');
+  });
+  const sb=$(name).querySelector('.scroll-body');
+  if(sb)sb.scrollTop=0;
+  cur=name;
+  if(name==='s4')renderHistFull();
+  if(name==='s1'){renderHistPreview();renderRec();}
+}
+$('back2').onclick=()=>go('s1');
+$('back3').onclick=()=>go('s2');
+$('back4').onclick=()=>go('s1');
+
+/* ── MODALS ── */
+function openModal(id){$(id).classList.add('on');}
+function closeModal(id){$(id).classList.remove('on');}
+// Close on backdrop tap
+['tipModal','fpsModal'].forEach(id=>{
+  $(id).addEventListener('click',e=>{if(e.target===$(id))closeModal(id);});
+});
+
+/* ── RECENTS ── */
+function getRec(){try{return JSON.parse(localStorage.getItem(SK))||[];}catch{return[];}}
+function saveRec(a){let l=getRec().filter(x=>x.name!==a.name);l.unshift(a);if(l.length>8)l=l.slice(0,8);localStorage.setItem(SK,JSON.stringify(l));}
+function delRec(name){localStorage.setItem(SK,JSON.stringify(getRec().filter(a=>a.name!==name)));renderRec();}
+function renderRec(){
+  const l=getRec(),sec=$('recSec'),ul=$('recList');
+  if(!l.length){sec.classList.add('hidden');return;}
+  sec.classList.remove('hidden');
+  ul.innerHTML=l.map(a=>`<div class="rec-item" data-n="${escHtml(a.name)}" data-m="${a.mass||''}">
+    <div><div class="rec-name">${escHtml(a.name)}</div><div class="rec-meta">${a.mass?a.mass+' kg':'sin peso'}</div></div>
+    <button class="rec-del" onclick="event.stopPropagation();delRec('${escHtml(a.name)}')">×</button>
+  </div>`).join('');
+  ul.querySelectorAll('.rec-item').forEach(el=>{
+    el.onclick=()=>{$('iName').value=el.dataset.n;$('iMass').value=el.dataset.m;};
+  });
+}
+function escHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+// Init
+renderRec();
+renderHistPreview();
+window.delRec=delRec;
+
+/* ── JUMP TYPE BUTTONS ── */
+document.querySelectorAll('.jbtn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.jbtn').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel');
+    S.jump=btn.dataset.jump;
+    showProtocol(S.jump);
+  };
+});
+
+function showProtocol(jt){
+  const el=$('protocolHint');
+  const cfg=JUMP_CFG[jt];
+  el.innerHTML=cfg.protocol;
+  el.style.display='block';
+  el.className='protocol-hint'+(jt==='dj'?' dj':'');
+}
+showProtocol('cmj');
+
+/* ── VALIDATE ATHLETE ── */
+function valAth(){
+  const name=$('iName').value.trim();
+  if(!name){toast('Ingresa el nombre del deportista','warn');return false;}
+  const mass=parseFloat($('iMass').value);
+  S.athlete={name,mass:isNaN(mass)?null:mass};
+  return true;
+}
+
+/* ── SOURCE BUTTONS ── */
+$('fileIn').onchange=e=>loadVid(e.target.files[0]);
+$('tipBtn').onclick=()=>openModal('tipModal');
+
+/* ── FPS DETECTOR ── */
+class FpsDet{
+  constructor(v,cb){this.v=v;this.cb=cb;this.ts=[];}
+  start(){
+    this.ts=[];
+    if(!('requestVideoFrameCallback' in HTMLVideoElement.prototype)){this._fb();return;}
+    const m=(now,meta)=>{
+      this.ts.push(meta.mediaTime);
+      if(this.ts.length<18)this.v.requestVideoFrameCallback(m);
+      else this._calc();
+    };
+    this.v.muted=true;this.v.playbackRate=16;
+    this.v.play().catch(()=>{});
+    this.v.requestVideoFrameCallback(m);
+  }
+  _calc(){
+    this.v.pause();this.v.playbackRate=1;this.v.currentTime=0;
+    const iv=[];
+    for(let i=1;i<this.ts.length;i++){const d=this.ts[i]-this.ts[i-1];if(d>0.002&&d<0.1)iv.push(d);}
+    if(!iv.length){this._fb();return;}
+    const avg=iv.reduce((a,b)=>a+b)/iv.length,raw=1/avg;
+    const fps=[24,25,30,50,60,90,120,240].reduce((p,c)=>Math.abs(c-raw)<Math.abs(p-raw)?c:p);
+    this.cb({fps,raw:raw.toFixed(1),m:'rvfc'});
+  }
+  _fb(){
+    this.v.pause();this.v.playbackRate=1;this.v.currentTime=0;
+    const q=this.v.getVideoPlaybackQuality?.();
+    if(q?.totalVideoFrames>0&&this.v.duration>0){
+      const raw=q.totalVideoFrames/this.v.duration;
+      const fps=[24,25,30,50,60,120,240].reduce((p,c)=>Math.abs(c-raw)<Math.abs(p-raw)?c:p);
+      this.cb({fps,raw:raw.toFixed(1),m:'quality'});
+    }else{this.cb({fps:240,raw:'?',m:'assumed'});}
+  }
+}
+
+/* ── FRAME NAV ── */
+class FNav{
+  constructor(v,fps){this.v=v;this.fps=fps;this.total=Math.floor(v.duration*fps);}
+  get frame(){return Math.round(this.v.currentTime*this.fps);}
+  get ms(){return+(this.v.currentTime*1000).toFixed(1);}
+  go(n){const c=Math.max(0,Math.min(n,this.total-1));this.v.currentTime=c/this.fps;return c;}
+  next(n=1){return this.go(this.frame+n);}
+  prev(n=1){return this.go(this.frame-n);}
+}
+
+/* ── LOAD VIDEO ── */
+function loadVid(file){
+  if(!file||!file.type.startsWith('video/')){toast('Selecciona un video válido','warn');return;}
+  if(!valAth())return;
+  S.pendingFile=file;
+  saveRec(S.athlete);renderRec();
+  showLd('Cargando video...');
+  vid.src=URL.createObjectURL(file);
+  vid.load();
+}
+
+/* ── VIDEO METADATA READY ── */
+vid.addEventListener('loadedmetadata',()=>{
+  setLd('Detectando fps...');
+  $('vbR').textContent=`${vid.videoWidth}×${vid.videoHeight}`;
+  resetMarkers();
+  new FpsDet(vid,r=>{
+    hideLd();
+    showFpsModal(r.fps, S.pendingFile?.name||'');
+  }).start();
+});
+vid.addEventListener('error',()=>{hideLd();toast('Error al cargar el video','warn');});
+
+/* ── FPS CONFIRM MODAL — 2 pasos ── */
+let _selectedFps = 240;
+
+function showFpsModal(detected, filename){
+  const fn=(filename||'').toLowerCase();
+  const looksSlomo=fn.includes('slomo')||fn.includes('slo-mo')||fn.includes('slow')||fn.includes('img_')||fn.includes('rpj');
+
+  // Paso 1: selección de fps
+  $('fpsStep1').style.display='block';
+  $('fpsStep2').style.display='none';
+
+  const dm=$('fpsDetMsg');
+  dm.innerHTML=`Detectado automáticamente: <strong style="color:var(--cyan)">${detected} fps</strong>`+
+    (looksSlomo?`<br><span style="color:var(--amber)">⚠ Parece un video Slo-mo — selecciona el fps con que grabaste</span>`:'');
+
+  const grid=$('fpsBtnGrid');
+  const opts=[
+    {fps:24,sub:'normal'},{fps:30,sub:'normal'},{fps:60,sub:'normal'},
+    {fps:120,sub:'Slo-mo'},{fps:240,sub:'Slo-mo ★'},{fps:960,sub:'4K Slo-mo'}
+  ];
+  _selectedFps = detected;
+  grid.innerHTML=opts.map(o=>`
+    <button onclick="selectFps(${o.fps})" id="fpsbtn${o.fps}" style="
+      padding:10px 6px;border-radius:var(--r);
+      border:1.5px solid ${o.fps===detected?'var(--cyan)':'var(--line2)'};
+      background:${o.fps===detected?'rgba(0,212,255,.12)':'var(--bg3)'};
+      color:${o.fps>=120?'var(--cyan)':o.fps===detected?'var(--text)':'var(--text2)'};
+      font-size:13px;font-weight:700;cursor:pointer;
+      display:flex;flex-direction:column;align-items:center;gap:2px;touch-action:manipulation">
+      ${o.fps}<span style="font-size:9px;font-weight:500;color:var(--text3)">${o.sub}</span>
+    </button>`).join('');
+
+  openModal('fpsModal');
+}
+
+window.selectFps=function(fps){
+  _selectedFps=fps;
+  // Highlight selected
+  [24,30,60,120,240,960].forEach(f=>{
+    const b=$('fpsbtn'+f);
+    if(!b)return;
+    b.style.border=f===fps?'1.5px solid var(--cyan)':'1.5px solid var(--line2)';
+    b.style.background=f===fps?'rgba(0,212,255,.12)':'var(--bg3)';
+  });
+  // Go to step 2
+  setTimeout(()=>{
+    $('fpsStep1').style.display='none';
+    $('fpsStep2').style.display='block';
+  },180);
+};
+
+// applyFps(isSlomo): true = video Slo-mo nativo (estirado 8x), false = video normal
+window.applyFps=function(isSlomo){
+  closeModal('fpsModal');
+
+  const fps=_selectedFps;
+
+  // Factor de corrección:
+  // iPhone graba 240fps y reproduce a 30fps → factor = 240/30 = 8
+  // Android similar. Si fps=120 → factor=4. Si fps=60 → factor=2.
+  // Video normal → factor=1 (sin corrección)
+  const PLAYBACK_FPS=30; // fps de reproducción estándar del Slo-mo exportado
+  const slomoFactor = isSlomo ? fps/PLAYBACK_FPS : 1;
+
+  S.fps=fps;
+  S.slomoFactor=slomoFactor;
+  S.nav=new FNav(vid,fps);
+
+  $('pillFps').textContent=`${fps}fps${isSlomo?' ÷'+slomoFactor:''}`;
+  $('pillFps').className='pill '+(fps>=120?'hi':'warn');
+  $('vbF').textContent=`${fps}fps`+(isSlomo?` ×1/${slomoFactor}`:'');
+  $('vbJ').textContent=JUMP_CFG[S.jump].label;
+  $('fTot').textContent=S.nav.total;
+  renderMarkerButtons();
+  updScrub();
+  go('s2');
+
+  const errRef=isSlomo?((9.80665*(1/fps)*0.5)/4*1000/slomoFactor).toFixed(1):null;
+  const msg=isSlomo
+    ? `✓ Slo-mo ${fps}fps · factor corrección ÷${slomoFactor}`
+    : fps>=60?`${fps}fps — precisión ±${((9.80665*(1/fps)*0.5)/4*1000).toFixed(0)}mm`
+    : `${fps}fps — considera usar Slo-mo para mayor precisión`;
+  toast(msg, isSlomo?'ok':fps>=60?'ok':'warn');
+};
+
+/* ── RESET MARKERS ── */
+function resetMarkers(){
+  S.to=null;S.la=null;S.djLand=null;
+  ['lTO','lLA','lDL','sTO','sLA','sDL'].forEach(id=>$(id).style.display='none');
+  $('btnCalc').classList.remove('on');
+}
+
+/* ── RENDER MARKER BUTTONS based on jump type ── */
+function renderMarkerButtons(){
+  const mrow=$('mrow');
+  const jt=S.jump;
+
+  if(jt==='dj'){
+    // Drop Jump: 3 markers in sequence
+    mrow.innerHTML=`
+      <div class="dj-steps" id="djSteps">
+        <div class="dj-step active" id="djS1"><div class="dj-dot"></div><span>①Caída</span></div>
+        <div class="dj-line"></div>
+        <div class="dj-step" id="djS2"><div class="dj-dot"></div><span>②Despegue</span></div>
+        <div class="dj-line"></div>
+        <div class="dj-step" id="djS3"><div class="dj-dot"></div><span>③Aterrizaje</span></div>
+      </div>
+      <button class="mbtn dj" id="btnDJL">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        ① Aterrizaje caída
+      </button>
+      <div class="mrow-pair">
+        <button class="mbtn to" id="btnTO" disabled>
+          <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          ② Despegue
+        </button>
+        <button class="mbtn la" id="btnLA" disabled>
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          ③ Aterrizaje
+        </button>
+      </div>`;
+
+    $('btnDJL').onclick=()=>{
+      if(!S.nav)return;
+      S.djLand=S.nav.frame;
+      $('lDL').style.display='block';$('sDL').style.display='block';
+      $('btnDJL').classList.add('done');$('btnDJL').disabled=true;
+      $('btnTO').disabled=false;
+      $('djS1').className='dj-step done';$('djS2').className='dj-step active';
+      updScrub();toast('① Aterrizaje caída: frame '+S.djLand,'info');
+    };
+    $('btnTO').onclick=()=>markTO();
+    $('btnLA').onclick=()=>markLA();
+
+  } else {
+    // SJ / CMJ / ABK: 2 markers
+    mrow.innerHTML=`
+      <div class="mrow-pair">
+        <button class="mbtn to" id="btnTO">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          Despegue
+        </button>
+        <button class="mbtn la" id="btnLA">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          Aterrizaje
+        </button>
+      </div>`;
+    $('btnTO').onclick=()=>markTO();
+    $('btnLA').onclick=()=>markLA();
+  }
+}
+
+function markTO(){
+  if(!S.nav)return;
+  S.to=S.nav.frame;
+  $('lTO').style.display='block';$('sTO').style.display='block';
+  const btn=$('btnTO');
+  if(btn){btn.classList.add('done');}
+  if(S.jump==='dj'){
+    $('btnLA').disabled=false;
+    $('djS2').className='dj-step done';$('djS3').className='dj-step active';
+  }
+  updScrub();checkCalc();
+  toast('Despegue: frame '+S.to,'info');
+}
+
+function markLA(){
+  if(!S.nav)return;
+  S.la=S.nav.frame;
+  $('lLA').style.display='block';$('sLA').style.display='block';
+  const btn=$('btnLA');
+  if(btn){btn.classList.add('done');}
+  if(S.jump==='dj'){$('djS3').className='dj-step done';}
+  updScrub();checkCalc();
+  toast('Aterrizaje: frame '+S.la,'ok');
+}
+
+function checkCalc(){
+  const jt=S.jump;
+  let ok=false;
+  if(jt==='dj'){
+    ok=S.djLand!==null&&S.to!==null&&S.la!==null&&S.to>S.djLand&&S.la>S.to;
+  } else {
+    ok=S.to!==null&&S.la!==null&&S.la>S.to;
+  }
+  $('btnCalc').classList.toggle('on',ok);
+}
+
+/* ── SCRUBBER ── */
+function updScrub(){
+  const nav=S.nav;if(!nav)return;
+  const pct=nav.total>0?nav.frame/nav.total*100:0;
+  $('sFill').style.width=pct+'%';
+  $('sThumb').style.left=pct+'%';
+  $('fCur').textContent=nav.frame;
+  $('tNow').textContent=(nav.ms/1000).toFixed(3)+' s';
+  $('pillF').textContent='f '+nav.frame;
+  const p=x=>x/nav.total*100+'%';
+  if(S.to!==null){$('lTO').style.left=p(S.to);$('sTO').style.left=p(S.to);}
+  if(S.la!==null){$('lLA').style.left=p(S.la);$('sLA').style.left=p(S.la);}
+  if(S.djLand!==null){$('lDL').style.left=p(S.djLand);$('sDL').style.left=p(S.djLand);}
+}
+
+function scrubAt(x){
+  const nav=S.nav;if(!nav)return;
+  const r=$('sWrap').getBoundingClientRect();
+  nav.go(Math.round(Math.max(0,Math.min(1,(x-r.left)/r.width))*nav.total));
+  updScrub();
+}
+$('sWrap').addEventListener('pointerdown',e=>{drag=true;$('sWrap').setPointerCapture(e.pointerId);scrubAt(e.clientX);});
+$('sWrap').addEventListener('pointermove',e=>{if(drag)scrubAt(e.clientX);});
+$('sWrap').addEventListener('pointerup',()=>drag=false);
+$('sWrap').addEventListener('pointercancel',()=>drag=false);
+vid.addEventListener('timeupdate',()=>{if(!drag)updScrub();});
+vid.addEventListener('seeked',()=>{if(!drag)updScrub();});
+
+/* ── TRANSPORT ── */
+$('bPlay').onclick=()=>{
+  if(!S.nav)return;
+  if(playing){vid.pause();$('bPlay').textContent='▶';$('vbS').textContent='PAUSA';playing=false;}
+  else{vid.playbackRate=0.25;vid.play();$('bPlay').textContent='⏸';$('vbS').textContent='▶ ×0.25';playing=true;}
+};
+vid.addEventListener('ended',()=>{playing=false;$('bPlay').textContent='▶';$('vbS').textContent='FIN';});
+$('bM1') .onclick=()=>{S.nav?.prev(1); updScrub();};
+$('bP1') .onclick=()=>{S.nav?.next(1); updScrub();};
+$('bM10').onclick=()=>{S.nav?.prev(10);updScrub();};
+$('bP10').onclick=()=>{S.nav?.next(10);updScrub();};
+
+/* ── KEYBOARD (iPad) ── */
+document.addEventListener('keydown',e=>{
+  if(!S.nav||cur!=='s2')return;
+  if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;
+  if(e.key==='ArrowLeft'){e.preventDefault();S.nav.prev(e.shiftKey?10:1);updScrub();}
+  else if(e.key==='ArrowRight'){e.preventDefault();S.nav.next(e.shiftKey?10:1);updScrub();}
+  else if(e.key===' '){e.preventDefault();$('bPlay').click();}
+  else if(e.key==='t'||e.key==='T')markTO();
+  else if(e.key==='l'||e.key==='L')markLA();
+  else if(e.key==='Enter')$('btnCalc').click();
+});
+
+/* ── CALCULATE ── */
+$('btnCalc').onclick=()=>{
+  const {to,la,djLand,fps,jump,athlete}=S;
+  const sf=S.slomoFactor||1; // factor corrección Slo-mo
+  if(!fps)return;
+
+  let res={fps,jump,athlete,date:new Date(),slomoFactor:sf};
+
+  if(jump==='dj'){
+    if(djLand===null||to===null||la===null||to<=djLand||la<=to){
+      toast('Verifica el orden: caída → despegue → aterrizaje','warn');return;
+    }
+    const tcFrames=to-djLand;
+    const tfFrames=la-to;
+    // Aplicar factor: dividir tiempo por slomoFactor para obtener tiempo real
+    const tc=(tcFrames/fps)/sf;
+    const tf=(tfFrames/fps)/sf;
+    const h=(G*tf*tf)/8;
+    const v=Math.sqrt(2*G*h);
+    const rsi=h/tc;
+    const rsiMod=h/(tc+tf);
+    const P=athlete.mass?(athlete.mass*G*h)/tc:null;
+    const err=((G*(1/(fps/sf))*tf)/4)*1000;
+    Object.assign(res,{tc,tf,tcFrames,tfFrames,h,h_cm:(h*100).toFixed(1),v,rsi,rsiMod,P,err,to,la,djLand});
+  } else {
+    if(to===null||la===null||la<=to){toast('El aterrizaje debe ser posterior al despegue','warn');return;}
+    const tfFrames=la-to;
+    // Aplicar factor: dividir tiempo por slomoFactor
+    const tf=(tfFrames/fps)/sf;
+    const h=(G*tf*tf)/8;
+    const v=Math.sqrt(2*G*h);
+    const P=athlete.mass?(athlete.mass*G*h)/tf:null;
+    const err=((G*(1/(fps/sf))*tf)/4)*1000;
+    Object.assign(res,{tf,tfFrames,h,h_cm:(h*100).toFixed(1),v,P,err,to,la});
+  }
+
+  S.res=res;
+  const saved=saveToHist(res);
+  res.id=saved.id;
+  renderResults(res);
+  go('s3');
+};
+
+/* ── RENDER RESULTS ── */
+function renderResults(r){
+  const ini=r.athlete.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  $('rAv').textContent=ini||'?';
+  $('rNm').textContent=r.athlete.name;
+  $('rMt').textContent=[
+    r.athlete.mass?r.athlete.mass+' kg':null,
+    r.date.toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}),
+    r.fps+'fps'+(r.slomoFactor>1?' ÷'+r.slomoFactor+' Slo-mo':'')
+  ].filter(Boolean).join(' · ');
+  const jb=$('rJump');
+  jb.textContent=JUMP_CFG[r.jump].label;
+  jb.className='jump-badge '+r.jump;
+
+  // Delta vs previous
+  const deltaHtml=renderDelta(r);
+  const deltaEl=document.getElementById('deltaBanner');
+  if(deltaEl)deltaEl.innerHTML=deltaHtml;
+  else{
+    const d=document.createElement('div');
+    d.id='deltaBanner';d.innerHTML=deltaHtml;
+    $('mg').before(d);
+  }
+
+  const pBar=(v,max)=>Math.min(100,(v/max)*100).toFixed(0);
+
+  if(r.jump==='dj'){
+    // Drop Jump results
+    $('mg').innerHTML=`
+      <div class="mc full" style="--mc:var(--cyan)">
+        <div class="mc-lbl">Altura de salto</div>
+        <div><span class="mc-val">${r.h_cm}</span><span class="mc-unit">cm</span></div>
+        <div class="mc-sub">${(r.h*100/2.54).toFixed(1)} pulg · h = g·t²/8</div>
+        <div class="mc-bar"><div class="mc-bf" style="width:${pBar(r.h*100,70)}%"></div></div>
+      </div>
+      <div class="mc" style="--mc:var(--purple)">
+        <div class="mc-lbl">RSI</div>
+        <div><span class="mc-val">${r.rsi.toFixed(2)}</span><span class="mc-unit">m/s</span></div>
+        <div class="mc-sub">h / t_contacto</div>
+        <div class="mc-bar"><div class="mc-bf" style="width:${pBar(r.rsi,3)}%"></div></div>
+      </div>
+      <div class="mc" style="--mc:var(--purple)">
+        <div class="mc-lbl">RSI-mod</div>
+        <div><span class="mc-val">${r.rsiMod.toFixed(2)}</span><span class="mc-unit"></span></div>
+        <div class="mc-sub">h / (t_c + t_v)</div>
+        <div class="mc-bar"><div class="mc-bf" style="width:${pBar(r.rsiMod,2)}%"></div></div>
+      </div>
+      <div class="mc" style="--mc:var(--green)">
+        <div class="mc-lbl">Vel. despegue</div>
+        <div><span class="mc-val">${r.v.toFixed(2)}</span><span class="mc-unit">m/s</span></div>
+        <div class="mc-sub">v = √(2·g·h)</div>
+        <div class="mc-bar"><div class="mc-bf" style="width:${pBar(r.v,5)}%"></div></div>
+      </div>
+      ${r.P!==null?`
+      <div class="mc" style="--mc:var(--amber)">
+        <div class="mc-lbl">Potencia</div>
+        <div><span class="mc-val">${Math.round(r.P)}</span><span class="mc-unit">W</span></div>
+        <div class="mc-sub">${r.athlete.mass} kg · P=m·g·h/t_c</div>
+        <div class="mc-bar"><div class="mc-bf" style="width:${pBar(r.P,4000)}%"></div></div>
+      </div>`:`
+      <div class="mc" style="opacity:.45">
+        <div class="mc-lbl">Potencia</div>
+        <div class="mc-val" style="font-size:14px;color:var(--text2)">Sin masa</div>
+      </div>`}
+      <div class="mc" style="--mc:var(--red)">
+        <div class="mc-lbl">Error ±</div>
+        <div><span class="mc-val">${r.err.toFixed(1)}</span><span class="mc-unit">mm</span></div>
+        <div class="mc-sub">${r.fps}fps · Pueo 2023</div>
+      </div>`;
+
+    $('tr').innerHTML=`
+      <div class="tc"><div class="tc-v">${Math.round(r.tc*1000)}</div><div class="tc-l">T. contacto ms</div></div>
+      <div class="tc"><div class="tc-v">${Math.round(r.tf*1000)}</div><div class="tc-l">T. vuelo ms</div></div>
+      <div class="tc"><div class="tc-v">${r.tcFrames}</div><div class="tc-l">Frames contacto</div></div>
+      <div class="tc"><div class="tc-v">${r.tfFrames}</div><div class="tc-l">Frames vuelo</div></div>`;
+    $('tr').style.gridTemplateColumns='1fr 1fr 1fr 1fr';
+
+    $('fcard').innerHTML=`<div class="fcard-t">Fórmulas Drop Jump</div>
+      <div class="fr"><span class="fr-n">Altura</span><span class="fr-e">h = g·t²v/8</span></div>
+      <div class="fr"><span class="fr-n">RSI</span><span class="fr-e">h / t_contacto</span></div>
+      <div class="fr"><span class="fr-n">RSI-mod</span><span class="fr-e">h / (t_c + t_v)</span></div>
+      <div class="fr"><span class="fr-n">Potencia</span><span class="fr-e">m·g·h / t_c</span></div>
+      <div class="fr"><span class="fr-n">g</span><span class="fr-e">9.80665 m/s²</span></div>`;
+
+  } else {
+    // CMJ / SJ / ABK results
+    $('mg').innerHTML=`
+      <div class="mc full" style="--mc:var(--cyan)">
+        <div class="mc-lbl">Altura de salto</div>
+        <div><span class="mc-val">${r.h_cm}</span><span class="mc-unit">cm</span></div>
+        <div class="mc-sub">${(r.h*100/2.54).toFixed(1)} pulg · ${r.h.toFixed(3)} m</div>
+        <div class="mc-bar"><div class="mc-bf" style="width:${pBar(r.h*100,75)}%"></div></div>
+      </div>
+      <div class="mc" style="--mc:var(--green)">
+        <div class="mc-lbl">Vel. despegue</div>
+        <div><span class="mc-val">${r.v.toFixed(2)}</span><span class="mc-unit">m/s</span></div>
+        <div class="mc-sub">v = √(2·g·h)</div>
+        <div class="mc-bar"><div class="mc-bf" style="width:${pBar(r.v,5)}%"></div></div>
+      </div>
+      ${r.P!==null?`
+      <div class="mc" style="--mc:var(--amber)">
+        <div class="mc-lbl">Potencia media</div>
+        <div><span class="mc-val">${Math.round(r.P)}</span><span class="mc-unit">W</span></div>
+        <div class="mc-sub">${r.athlete.mass} kg · P=m·g·h/t</div>
+        <div class="mc-bar"><div class="mc-bf" style="width:${pBar(r.P,4000)}%"></div></div>
+      </div>`:`
+      <div class="mc" style="opacity:.45">
+        <div class="mc-lbl">Potencia media</div>
+        <div class="mc-val" style="font-size:14px;color:var(--text2)">Sin masa</div>
+        <div class="mc-sub">Ingresa el peso</div>
+      </div>`}
+      <div class="mc" style="--mc:var(--red)">
+        <div class="mc-lbl">Error ±</div>
+        <div><span class="mc-val">${r.err.toFixed(1)}</span><span class="mc-unit">mm</span></div>
+        <div class="mc-sub">${r.fps}fps · Pueo 2023</div>
+      </div>`;
+
+    $('tr').innerHTML=`
+      <div class="tc"><div class="tc-v">${Math.round(r.tf*1000)}</div><div class="tc-l">T. vuelo ms</div></div>
+      <div class="tc"><div class="tc-v">${r.tfFrames}</div><div class="tc-l">Frames vuelo</div></div>
+      <div class="tc"><div class="tc-v">${r.fps}</div><div class="tc-l">fps video</div></div>`;
+    $('tr').style.gridTemplateColumns='1fr 1fr 1fr';
+
+    $('fcard').innerHTML=`<div class="fcard-t">Fórmulas ${JUMP_CFG[r.jump].label}</div>
+      <div class="fr"><span class="fr-n">Altura</span><span class="fr-e">h = g·t²/8</span></div>
+      <div class="fr"><span class="fr-n">Vel. despegue</span><span class="fr-e">v = √(2·g·h)</span></div>
+      <div class="fr"><span class="fr-n">Potencia</span><span class="fr-e">m·g·h / t_vuelo</span></div>
+      <div class="fr"><span class="fr-n">g</span><span class="fr-e">9.80665 m/s²</span></div>`;
+  }
+
+  // Error banner
+  const eb=$('eb');
+  if(r.fps>=240){eb.className='err good';eb.textContent=`✓ ${r.fps}fps — precisión equivalente a plataforma de fuerza (±${r.err.toFixed(1)}mm)`;}
+  else if(r.fps>=120){eb.className='err warn';eb.textContent=`⚠ ${r.fps}fps — buena precisión (±${r.err.toFixed(1)}mm). Para ±1mm usa Slo-mo 240fps`;}
+  else{eb.className='err bad';eb.textContent=`✕ ${r.fps}fps — precisión limitada (±${r.err.toFixed(0)}mm). Usa modo Slo-mo 240fps`;}
+}
+
+/* ── NEW EVAL / SHARE ── */
+$('btnNew').onclick=()=>{
+  resetMarkers();
+  S.pendingFile=null;
+  $('fileIn').value='';
+  go('s1');
+  renderHistPreview();
+};
+
+$('btnShr').onclick=()=>{
+  const r=S.res;if(!r)return;
+  const jl=JUMP_CFG[r.jump].label;
+  const lines=[
+    `JumpLab — ${r.athlete.name} (${jl})`,
+    `Fecha: ${r.date.toLocaleDateString('es-CL')}`,
+    `Altura: ${r.h_cm} cm`,
+    `Vel. despegue: ${r.v.toFixed(2)} m/s`,
+    r.P?`Potencia: ${Math.round(r.P)} W`:'',
+    r.jump==='dj'?`RSI: ${r.rsi.toFixed(2)} | T. contacto: ${Math.round(r.tc*1000)}ms`:'',
+    `T. vuelo: ${Math.round(r.tf*1000)} ms`,
+    `Video: ${r.fps}fps · Error ±${r.err.toFixed(1)}mm`,
+    `App: https://crojashefi-lab.github.io/JumpLab/`
+  ].filter(Boolean).join('\n');
+
+  if(navigator.share)navigator.share({title:'JumpLab',text:lines}).catch(()=>{});
+  else navigator.clipboard?.writeText(lines).then(()=>toast('Copiado al portapapeles','ok')).catch(()=>toast('No se pudo compartir','warn'));
+};
+
+/* ══════════════════════════════════════════════
+   EXPORTACIÓN — CSV + PDF
+══════════════════════════════════════════════ */
+
+/* ── CLUB LOGO ── */
+const CL_KEY='jl_club';
+function getClub(){try{return JSON.parse(localStorage.getItem(CL_KEY))||{name:'',logo:''};}catch{return{name:'',logo:''};}}
+function saveClubLogo(){
+  const name=$('clubName').value.trim();
+  const existing=getClub();
+  localStorage.setItem(CL_KEY,JSON.stringify({name,logo:existing.logo}));
+  closeModal('clubLogoModal');
+  toast('Logo del club guardado','ok');
+}
+window.saveClubLogo=saveClubLogo;
+
+$('clubLogoInput').onchange=function(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const logo=ev.target.result;
+    const club=getClub();
+    club.logo=logo;
+    localStorage.setItem(CL_KEY,JSON.stringify(club));
+    $('logoPreview').innerHTML=`<img src="${logo}" style="max-height:60px;max-width:100%;border-radius:6px">`;
+  };
+  reader.readAsDataURL(file);
+};
+
+function openClubLogoModal(){
+  const club=getClub();
+  $('clubName').value=club.name||'';
+  $('logoPreview').innerHTML=club.logo
+    ?`<img src="${club.logo}" style="max-height:60px;max-width:100%;border-radius:6px">`
+    :`<span style="color:var(--text3);font-size:13px">Sin logo — toca para subir</span>`;
+  openModal('clubLogoModal');
+}
+$('btnClubLogo').onclick=openClubLogoModal;
+
+/* ── CSV EXPORT ── */
+function exportCSV(){
+  const h=getHist();
+  if(!h.length){toast('Sin datos para exportar','warn');return;}
+  const cols=['Fecha','Atleta','Masa_kg','Tipo_salto','fps','Factor_slomo',
+    'Altura_cm','T_vuelo_ms','Vel_despegue_ms','Potencia_W',
+    'RSI','RSI_mod','T_contacto_ms','Error_mm'];
+  const rows=h.map(e=>[
+    new Date(e.date).toLocaleDateString('es-CL'),
+    `"${e.athlete}"`,
+    e.mass||'',
+    e.jump.toUpperCase(),
+    e.fps,
+    e.slomoFactor||1,
+    e.h_cm,
+    e.tf_ms,
+    e.v,
+    e.P||'',
+    e.rsi||'',
+    e.rsiMod||'',
+    e.tc_ms||'',
+    e.err
+  ].join(','));
+  const csv=[cols.join(','),...rows].join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`JumpLab_historial_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`${h.length} registros exportados','ok`);
+}
+$('btnExportCsv').onclick=exportCSV;
+
+/* ── PDF ENGINE ── */
+// Genera PDF puro en HTML y lo abre como ventana imprimible
+// Compatible con iOS Safari "Imprimir → Guardar como PDF"
+
+function buildPdfHtml(title, bodyHtml){
+  const club=getClub();
+  const date=new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'});
+
+  const jumpLabLogo=`<div style="display:flex;align-items:center;gap:8px">
+    <div style="width:32px;height:32px;background:#00d4ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px">⚡</div>
+    <div>
+      <div style="font-size:18px;font-weight:800;letter-spacing:-0.5px;color:#0f1422">Jump<span style="color:#00d4ff">Lab</span></div>
+      <div style="font-size:9px;color:#7d8db0;letter-spacing:1px;font-weight:600">ANÁLISIS BIOMECÁNICO DE SALTO</div>
+    </div>
+  </div>`;
+
+  const clubSection=club.name||club.logo?`
+    <div style="display:flex;align-items:center;gap:10px">
+      ${club.logo?`<img src="${club.logo}" style="height:40px;max-width:120px;object-fit:contain">`:''}
+      ${club.name?`<div style="font-size:13px;font-weight:700;color:#1e2840;text-align:right">${escHtml(club.name)}</div>`:''}
+    </div>`:'';
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;color:#1e2840;background:#fff;font-size:13px;line-height:1.4}
+  .page{max-width:794px;margin:0 auto;padding:32px 36px}
+  .header{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:2px solid #00d4ff;margin-bottom:20px}
+  .report-title{font-size:11px;font-weight:700;color:#7d8db0;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+  .report-date{font-size:12px;color:#7d8db0}
+  h2{font-size:15px;font-weight:800;color:#0f1422;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #e8ecf4;letter-spacing:-.3px}
+  table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px}
+  thead th{background:#0f1422;color:#fff;padding:8px 10px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  thead th:last-child{text-align:right}
+  tbody tr:nth-child(even){background:#f7f9fc}
+  tbody td{padding:8px 10px;border-bottom:1px solid #e8ecf4;color:#1e2840}
+  tbody td:last-child{text-align:right;font-weight:700}
+  .badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase}
+  .badge-cmj,.badge-sj,.badge-abk{background:#e0f7ff;color:#0099cc}
+  .badge-dj{background:#ede9fe;color:#7c3aed}
+  .metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .metric-box{background:#f7f9fc;border-radius:10px;padding:14px;border:1px solid #e8ecf4}
+  .metric-box.main{background:#0f1422;color:#fff;border-color:#0f1422}
+  .metric-label{font-size:10px;font-weight:700;color:#7d8db0;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+  .metric-box.main .metric-label{color:#94a3b8}
+  .metric-val{font-size:26px;font-weight:800;letter-spacing:-1px;color:#0f1422}
+  .metric-box.main .metric-val{color:#00d4ff}
+  .metric-unit{font-size:12px;font-weight:400;color:#7d8db0;margin-left:2px}
+  .metric-sub{font-size:10px;color:#94a3b8;margin-top:3px}
+  .delta-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .delta-pill{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid}
+  .delta-up{background:#f0fdf4;border-color:#86efac;color:#16a34a}
+  .delta-dn{background:#fef2f2;border-color:#fca5a5;color:#dc2626}
+  .delta-eq{background:#f8fafc;border-color:#cbd5e1;color:#64748b}
+  .chart-bar-wrap{margin-bottom:20px}
+  .chart-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .chart-bar-label{width:120px;font-size:11px;color:#475569;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chart-bar-track{flex:1;height:18px;background:#f1f5f9;border-radius:4px;overflow:hidden}
+  .chart-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#00d4ff,#0099cc);display:flex;align-items:center;padding-left:6px;min-width:30px}
+  .chart-bar-val{font-size:10px;font-weight:700;color:#fff;white-space:nowrap}
+  .footer{margin-top:28px;padding-top:14px;border-top:1px solid #e8ecf4;display:flex;justify-content:space-between;align-items:center}
+  .footer-note{font-size:10px;color:#94a3b8}
+  .formula-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:11px}
+  .formula-row:last-child{border:none}
+  .formula-name{color:#475569}
+  .formula-expr{font-family:monospace;color:#7d8db0}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{padding:20px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    ${jumpLabLogo}
+    <div style="text-align:center">
+      <div class="report-title">${title}</div>
+      <div class="report-date">${date}</div>
+    </div>
+    ${clubSection}
+  </div>
+  ${bodyHtml}
+  <div class="footer">
+    <div class="footer-note">Generado por JumpLab · h = g·t²/8 · g = 9.80665 m/s² · Método: tiempo de vuelo por análisis de video</div>
+    <div class="footer-note">jumplab.app</div>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+function openPdfWindow(html){
+  const w=window.open('','_blank');
+  if(!w){toast('Permite ventanas emergentes para generar PDF','warn');return;}
+  w.document.write(html);
+  w.document.close();
+  // En iOS Safari el usuario usa "Compartir → Imprimir → Guardar PDF"
+  setTimeout(()=>{
+    try{w.print();}catch(e){}
+  },600);
+}
+
+/* ── PDF ATLETA ── */
+function generatePdfAtleta(athleteName){
+  const hist=getHist().filter(e=>e.athlete===athleteName);
+  if(!hist.length){toast('Sin registros para este atleta','warn');return;}
+
+  const name=hist[0].athlete;
+  const mass=hist[0].mass;
+
+  // Último resultado
+  const last=hist[0];
+  const prev=hist[1]||null;
+
+  // Métricas del último salto
+  const metricsHtml=`
+    <h2>${escHtml(name)} — Resumen del atleta</h2>
+    ${mass?`<p style="font-size:12px;color:#7d8db0;margin-bottom:12px">Masa corporal: ${mass} kg · ${hist.length} evaluación${hist.length!==1?'es':''} registrada${hist.length!==1?'s':''}</p>`:''}
+    <div class="metric-grid">
+      <div class="metric-box main">
+        <div class="metric-label">Última altura</div>
+        <div><span class="metric-val">${last.h_cm}</span><span class="metric-unit">cm</span></div>
+        <div class="metric-sub">${new Date(last.date).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Mejor altura</div>
+        <div><span class="metric-val" style="color:#0f1422">${Math.max(...hist.map(e=>e.h_cm)).toFixed(1)}</span><span class="metric-unit">cm</span></div>
+        <div class="metric-sub">Récord personal</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Vel. despegue</div>
+        <div><span class="metric-val" style="color:#0f1422">${last.v}</span><span class="metric-unit">m/s</span></div>
+        <div class="metric-sub">Último salto</div>
+      </div>
+      ${last.P?`<div class="metric-box">
+        <div class="metric-label">Potencia</div>
+        <div><span class="metric-val" style="color:#0f1422">${last.P}</span><span class="metric-unit">W</span></div>
+        <div class="metric-sub">m·g·h/t</div>
+      </div>`:''}
+      ${last.rsi?`<div class="metric-box">
+        <div class="metric-label">RSI</div>
+        <div><span class="metric-val" style="color:#7c3aed">${last.rsi}</span></div>
+        <div class="metric-sub">h / t_contacto</div>
+      </div>`:''}
+      <div class="metric-box">
+        <div class="metric-label">Evaluaciones</div>
+        <div><span class="metric-val" style="color:#0f1422">${hist.length}</span></div>
+        <div class="metric-sub">Total registradas</div>
+      </div>
+    </div>`;
+
+  // Delta vs anterior
+  const deltaHtml=prev?`
+    <div class="delta-row">
+      ${(()=>{const d=(last.h_cm-prev.h_cm).toFixed(1);const cls=d>0?'up':d<0?'dn':'eq';return `<div class="delta-pill delta-${cls}">${d>0?'▲':'▼'} ${Math.abs(d)} cm altura vs ${new Date(prev.date).toLocaleDateString('es-CL',{day:'2-digit',month:'short'})}</div>`;})()}
+      ${(()=>{const d=(last.v-prev.v).toFixed(2);const cls=d>0?'up':d<0?'dn':'eq';return `<div class="delta-pill delta-${cls}">${d>0?'▲':'▼'} ${Math.abs(d)} m/s velocidad</div>`;})()}
+      ${last.P&&prev.P?(()=>{const d=Math.round(last.P-prev.P);const cls=d>0?'up':d<0?'dn':'eq';return `<div class="delta-pill delta-${cls}">${d>0?'▲':'▼'} ${Math.abs(d)} W potencia</div>`;})():''}
+    </div>`:'';
+
+  // Gráfico de barras evolución altura
+  const maxH=Math.max(...hist.map(e=>e.h_cm));
+  const chartHtml=hist.length>1?`
+    <h2>Evolución de altura de salto</h2>
+    <div class="chart-bar-wrap">
+      ${[...hist].reverse().map(e=>{
+        const pct=(e.h_cm/maxH*100).toFixed(0);
+        return `<div class="chart-bar-row">
+          <div class="chart-bar-label">${new Date(e.date).toLocaleDateString('es-CL',{day:'2-digit',month:'short'})}</div>
+          <div class="chart-bar-track">
+            <div class="chart-bar-fill" style="width:${pct}%">
+              <span class="chart-bar-val">${e.h_cm}cm</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:'';
+
+  // Tabla historial
+  const tableHtml=`
+    <h2>Historial completo</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th><th>Tipo</th><th>Altura</th>
+          <th>T. vuelo</th><th>Vel.</th>
+          ${hist.some(e=>e.P)?'<th>Potencia</th>':''}
+          ${hist.some(e=>e.rsi)?'<th>RSI</th>':''}
+          <th>fps</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${hist.map(e=>`<tr>
+          <td>${new Date(e.date).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}</td>
+          <td><span class="badge badge-${e.jump}">${e.jump.toUpperCase()}</span></td>
+          <td><strong>${e.h_cm} cm</strong></td>
+          <td>${e.tf_ms} ms</td>
+          <td>${e.v} m/s</td>
+          ${hist.some(x=>x.P)?`<td>${e.P?e.P+' W':'—'}</td>`:''}
+          ${hist.some(x=>x.rsi)?`<td>${e.rsi||'—'}</td>`:''}
+          <td>${e.fps}${e.slomoFactor>1?'÷'+e.slomoFactor:''}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  const formulasHtml=`
+    <div class="formula-row"><span class="formula-name">Altura de salto</span><span class="formula-expr">h = g·t²/8</span></div>
+    <div class="formula-row"><span class="formula-name">Velocidad despegue</span><span class="formula-expr">v = √(2·g·h)</span></div>
+    <div class="formula-row"><span class="formula-name">Potencia media</span><span class="formula-expr">P = m·g·h / t_vuelo</span></div>
+    ${hist.some(e=>e.rsi)?'<div class="formula-row"><span class="formula-name">RSI (Drop Jump)</span><span class="formula-expr">h / t_contacto</span></div>':''}`;
+
+  const body=metricsHtml+deltaHtml+chartHtml+tableHtml+formulasHtml;
+  openPdfWindow(buildPdfHtml(`Reporte Atleta — ${name}`,body));
+}
+
+/* ── PDF SESIÓN ── */
+function generatePdfSesion(dateStr){
+  // dateStr: YYYY-MM-DD, null = hoy
+  const today=dateStr||new Date().toISOString().slice(0,10);
+  const hist=getHist().filter(e=>e.date.slice(0,10)===today);
+  if(!hist.length){toast('Sin evaluaciones para esta fecha','warn');return;}
+
+  const dateLabel=new Date(today+'T12:00:00').toLocaleDateString('es-CL',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const athletes=[...new Set(hist.map(e=>e.athlete))];
+
+  const summaryHtml=`
+    <h2>Sesión: ${dateLabel}</h2>
+    <p style="font-size:12px;color:#7d8db0;margin-bottom:14px">${hist.length} evaluación${hist.length!==1?'es':''} · ${athletes.length} atleta${athletes.length!==1?'s':''}</p>
+    <div class="metric-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="metric-box main">
+        <div class="metric-label">Evaluaciones</div>
+        <div class="metric-val">${hist.length}</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Atletas</div>
+        <div class="metric-val" style="color:#0f1422">${athletes.length}</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Altura prom.</div>
+        <div><span class="metric-val" style="color:#0f1422">${(hist.reduce((s,e)=>s+e.h_cm,0)/hist.length).toFixed(1)}</span><span class="metric-unit">cm</span></div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Mejor salto</div>
+        <div><span class="metric-val" style="color:#0099cc">${Math.max(...hist.map(e=>e.h_cm)).toFixed(1)}</span><span class="metric-unit">cm</span></div>
+      </div>
+    </div>`;
+
+  // Tabla sesión
+  const tableHtml=`
+    <h2>Detalle por atleta</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Atleta</th><th>Tipo</th><th>Altura</th>
+          <th>T. vuelo</th><th>Vel.</th>
+          ${hist.some(e=>e.P)?'<th>Potencia</th>':''}
+          ${hist.some(e=>e.rsi)?'<th>RSI</th>':''}
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${[...hist].sort((a,b)=>b.h_cm-a.h_cm).map(e=>`<tr>
+          <td><strong>${escHtml(e.athlete)}</strong>${e.mass?` <span style="color:#94a3b8;font-size:11px">${e.mass}kg</span>`:''}</td>
+          <td><span class="badge badge-${e.jump}">${e.jump.toUpperCase()}</span></td>
+          <td><strong>${e.h_cm} cm</strong></td>
+          <td>${e.tf_ms} ms</td>
+          <td>${e.v} m/s</td>
+          ${hist.some(x=>x.P)?`<td>${e.P?e.P+' W':'—'}</td>`:''}
+          ${hist.some(x=>x.rsi)?`<td>${e.rsi?e.rsi:'—'}</td>`:''}
+          <td style="color:#94a3b8">±${e.err}mm</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  // Gráfico barras sesión
+  const maxH=Math.max(...hist.map(e=>e.h_cm));
+  const chartHtml=`
+    <h2>Comparación de altura — sesión</h2>
+    <div class="chart-bar-wrap">
+      ${[...hist].sort((a,b)=>b.h_cm-a.h_cm).map(e=>{
+        const pct=(e.h_cm/maxH*100).toFixed(0);
+        return `<div class="chart-bar-row">
+          <div class="chart-bar-label">${escHtml(e.athlete)}</div>
+          <div class="chart-bar-track">
+            <div class="chart-bar-fill" style="width:${pct}%">
+              <span class="chart-bar-val">${e.h_cm}cm</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  const body=summaryHtml+tableHtml+chartHtml;
+  openPdfWindow(buildPdfHtml(`Reporte Sesión — ${dateLabel}`,body));
+}
+
+/* ── BUTTON HANDLERS ── */
+$('btnPdfAtleta').onclick=()=>{
+  const r=S.res;
+  if(!r){toast('Realiza una evaluación primero','warn');return;}
+  generatePdfAtleta(r.athlete.name);
+};
+$('btnPdfSesion').onclick=()=>generatePdfSesion(null);
+$('btnPdfSesionHist').onclick=()=>generatePdfSesion(null);
+
+/* ── LOADING / TOAST ── */
+function showLd(m){$('ldMsg').textContent=m;$('ld').classList.add('on');}
+function setLd(m){$('ldMsg').textContent=m;}
+function hideLd(){$('ld').classList.remove('on');}
+let tt=null;
+function toast(msg,type='info'){
+  const t=$('toast');t.textContent=msg;t.className='toast '+type;
+  clearTimeout(tt);void t.offsetWidth;t.classList.add('on');
+  tt=setTimeout(()=>t.classList.remove('on'),3200);
+}
+</script>
+</body>
+</html>
